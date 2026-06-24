@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>History Detail</title>
+
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/history-detail.css">
+
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+</head>
+
+<body>
+
+<div class="iphone-frame">
+
+  <div class="screen">
+
+    <!-- HEADER -->
+    <div class="detail-header">
+
+      <h1>DFU Care+</h1>
+
+      <div class="header-right">
+
+        <div class="username" id="username">
+          ผู้ใช้
+        </div>
+
+        <div class="profile"></div>
+
+      </div>
+
+    </div>
+
+    <!-- CONTENT -->
+    <div class="detail-container">
+
+      <!-- BACK -->
+      <div class="back-btn" onclick="goBack()">
+        <i class="fa-solid fa-arrow-left"></i>
+      </div>
+
+      <!-- TITLE -->
+      <div class="detail-title">
+        ประวัติการวิเคราะห์
+      </div>
+
+      <!-- DATE + POSITION -->
+      <div class="detail-top">
+
+        <div id="detailDate" class="detail-date">
+        </div>
+
+        <div id="detailPosition" class="detail-position">
+        </div>
+
+      </div>
+
+      <!-- IMAGE -->
+      <div class="image-wrapper">
+
+        <img
+          id="detailImage"
+          class="detail-image"
+        >
+
+      </div>
+
+      <!-- RESULT -->
+      <div class="result-title">
+        ผลคาดการณ์ว่า!
+      </div>
+
+      <div class="result-grade" id="detailGrade">
+      </div>
+
+      <!-- ADVICE -->
+      <div class="advice-title">
+        คำแนะนำในการดูแลเบื้องต้น
+      </div>
+
+      <div class="advice-box" id="detailAdvice">
+      </div>
+
+      <!-- BUTTONS -->
+      <div class="detail-buttons">
+
+        <button class="delete-btn" onclick="deleteHistory()">
+          <i class="fa-regular fa-trash-can"></i>
+          ลบ
+        </button>
+
+        <button class="print-btn" onclick="printPDF()">
+          <i class="fa-solid fa-print"></i>
+          พิมพ์
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<script>
+
+// ================= LOGIN CHECK =================
+const citizenId = localStorage.getItem("citizen_id");
+
+if (!citizenId) {
+  window.location.href = "login.html";
+}
+
+
+// ================= USER =================
+document.getElementById("username").innerText =
+  localStorage.getItem("user_name") || "ผู้ใช้";
+
+
+// ================= GET DATA =================
+const rawData =
+  localStorage.getItem("selected_history");
+
+
+// ================= CHECK DATA =================
+if (!rawData) {
+
+  alert("ไม่พบข้อมูล");
+
+  window.location.href = "history.html";
+
+}
+
+
+// ================= PARSE DATA =================
+const historyData = JSON.parse(rawData);
+
+
+// ================= FORMAT DATE =================
+const date = new Date(historyData.created_at);
+
+const thaiDate = date.toLocaleDateString("th-TH", {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric'
+});
+
+
+// ================= SET DATA =================
+document.getElementById("detailDate").innerText =
+  `วันที่ ${thaiDate}`;
+
+document.getElementById("detailPosition").innerText =
+  historyData.wound_position || "-";
+
+document.getElementById("detailGrade").innerText =
+  `Wagner Graed : Class ${historyData.class_id}`;
+
+document.getElementById("detailAdvice").innerText =
+  historyData.advice || "-";
+
+
+// ================= IMAGE =================
+const imageEl =
+  document.getElementById("detailImage");
+
+if (historyData.image_name) {
+
+  imageEl.src =
+    `http://127.0.0.1:8000/uploads/${historyData.image_name}`;
+
+} else {
+
+  imageEl.src =
+    "https://via.placeholder.com/220x220?text=No+Image";
+
+}
+
+imageEl.onerror = function () {
+
+  this.src =
+    "https://via.placeholder.com/220x220?text=No+Image";
+
+};
+
+
+// ================= BACK =================
+function goBack(){
+
+  window.location.href = "history.html";
+
+}
+
+// ================= PRINT PDF =================
+function printPDF(){
+
+  // 🔥 ซ่อนปุ่มก่อนพิมพ์
+  document.querySelector(".detail-buttons")
+    .style.display = "none";
+
+  // 🔥 เปิด print
+  window.print();
+
+  // 🔥 แสดงปุ่มกลับ
+  setTimeout(() => {
+
+    document.querySelector(".detail-buttons")
+      .style.display = "flex";
+
+  }, 500);
+
+}
+// ================= DELETE HISTORY =================
+async function deleteHistory(){
+
+  const confirmDelete =
+    confirm("คุณต้องการลบข้อมูลนี้หรือไม่?");
+
+  if(!confirmDelete){
+    return;
+  }
+
+  try{
+
+    const res = await fetch(
+
+      `http://127.0.0.1:8000/api/delete-history/${historyData.id}`,
+
+      {
+        method: "DELETE"
+      }
+
+    );
+
+    const result = await res.json();
+
+    if(result.error){
+
+      alert("❌ " + result.error);
+
+      return;
+
+    }
+
+    alert("✅ ลบสำเร็จ");
+
+    // 🔥 ล้างข้อมูล
+    localStorage.removeItem("selected_history");
+
+    // 🔥 กลับหน้าประวัติ
+    window.location.href = "history.html";
+
+  }
+
+  catch(err){
+
+    console.error(err);
+
+    alert("❌ ลบไม่สำเร็จ");
+
+  }
+
+}
+
+
+</script>
+
+</body>
+</html>

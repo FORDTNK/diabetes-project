@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Treatment</title>
+
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/home.css">
+<link rel="stylesheet" href="css/treatment.css">
+
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+</head>
+
+<body>
+
+<div class="iphone-frame">
+
+  <div class="screen">
+
+    <!-- HEADER -->
+    <div class="header">
+
+      <h1>DFU Care+</h1>
+
+      <div class="header-right">
+
+        <div class="user" id="username"></div>
+
+        <div class="profile"></div>
+
+      </div>
+
+    </div>
+
+    <!-- CONTENT -->
+    <div class="treatment-container">
+
+      <!-- TOP -->
+      <div class="treatment-header">
+
+        <div class="treatment-title">
+          การรักษาจากแพทย์
+        </div>
+
+        <div class="treatment-filter">
+          วันที่ล่าสุด
+        </div>
+
+      </div>
+
+      <!-- ADD -->
+      <div class="add-box" onclick="openModal()">
+        <i class="fa-solid fa-plus"></i>
+      </div>
+
+      <!-- LIST -->
+      <div id="treatmentList"></div>
+
+    </div>
+
+  </div>
+
+
+  <!-- POPUP -->
+  <div class="popup" id="popup">
+
+    <div class="popup-card">
+
+      <div class="popup-title">
+        เพิ่มการรักษา
+      </div>
+
+      <!-- DATE -->
+      <div class="input-title">
+        วันที่ได้รับการรักษา
+      </div>
+
+      <input
+        type="date"
+        id="treatmentDate"
+        class="popup-input"
+      >
+
+      <!-- TREATMENT -->
+      <div class="green-title">
+        การรักษาจากแพทย์
+      </div>
+
+      <textarea
+        id="treatmentText"
+        class="popup-textarea"
+        placeholder="เช่น หมอทำความสะอาดแผล..."
+      ></textarea>
+
+      <!-- ADVICE -->
+      <div class="yellow-title">
+        คำแนะนำจากแพทย์
+      </div>
+
+      <textarea
+        id="doctorAdvice"
+        class="popup-textarea"
+        placeholder="เช่น ลดแรงกดที่เท้า..."
+      ></textarea>
+
+      <!-- DETAIL -->
+      <div class="red-title">
+        รายละเอียด
+      </div>
+
+      <textarea
+        id="detailText"
+        class="popup-textarea"
+        placeholder="เช่น ตำแหน่งแผล..."
+      ></textarea>
+
+      <!-- BUTTON -->
+      <div class="popup-buttons">
+
+        <button
+          class="cancel-btn"
+          onclick="closeModal()"
+        >
+          ยกเลิก
+        </button>
+
+        <button
+          class="save-btn"
+          onclick="saveTreatment()"
+        >
+          บันทึก
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- BOTTOM NAV -->
+  <div class="bottom-nav">
+
+    <div class="nav-btn"
+      onclick="goPage('home')">
+
+      <i class="fa-solid fa-house"></i>
+
+    </div>
+
+    <div class="nav-btn"
+      onclick="goPage('history')">
+
+      <i class="fa-solid fa-clock"></i>
+
+    </div>
+
+    <div class="scan-btn"
+      onclick="goPage('scan')">
+
+      <i class="fa-solid fa-camera"></i>
+
+    </div>
+
+    <div class="nav-btn active">
+
+      <i class="fa-solid fa-folder"></i>
+
+    </div>
+
+    <div class="nav-btn"
+      onclick="goPage('stats')">
+
+      <i class="fa-solid fa-chart-line"></i>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<script>
+
+// ================= LOGIN CHECK =================
+const citizenId = localStorage.getItem("citizen_id");
+
+if(!citizenId){
+
+  alert("กรุณาเข้าสู่ระบบ");
+
+  window.location.href = "login.html";
+
+}
+
+
+// ================= USER =================
+document.getElementById("username").innerText =
+localStorage.getItem("user_name") || "ผู้ใช้";
+
+
+// ================= PAGE =================
+function goPage(page){
+
+  window.location.href = page + ".html";
+
+}
+
+
+// ================= POPUP =================
+function openModal(){
+
+  document.getElementById("popup")
+  .style.display = "flex";
+
+}
+
+
+function closeModal(){
+
+  document.getElementById("popup")
+  .style.display = "none";
+
+}
+
+
+// ================= DETAIL =================
+function openDetail(item){
+
+  localStorage.setItem(
+    "selected_treatment",
+    JSON.stringify(item)
+  );
+
+  window.location.href =
+  "treatment-detail.html";
+
+}
+
+
+// ================= SAVE =================
+async function saveTreatment(){
+
+  const payload = {
+
+    citizen_id: citizenId,
+
+    treatment_date:
+    document.getElementById("treatmentDate").value,
+
+    treatment_text:
+    document.getElementById("treatmentText").value,
+
+    doctor_advice:
+    document.getElementById("doctorAdvice").value,
+
+    detail_text:
+    document.getElementById("detailText").value
+
+  };
+
+
+  // validate
+  if(
+    !payload.treatment_date ||
+    !payload.treatment_text
+  ){
+
+    alert("กรอกข้อมูลให้ครบ");
+
+    return;
+
+  }
+
+
+  try{
+
+    const res = await fetch(
+      "http://127.0.0.1:8000/api/save-treatment",
+      {
+        method:"POST",
+
+        headers:{
+          "Content-Type":"application/json"
+        },
+
+        body:JSON.stringify(payload)
+      }
+    );
+
+    const data = await res.json();
+
+    console.log("SAVE =", data);
+
+    if(!data.success){
+
+      alert(data.message || "บันทึกไม่สำเร็จ");
+
+      return;
+
+    }
+
+    alert("บันทึกสำเร็จ");
+
+    closeModal();
+
+    // clear
+    document.getElementById("treatmentDate").value = "";
+    document.getElementById("treatmentText").value = "";
+    document.getElementById("doctorAdvice").value = "";
+    document.getElementById("detailText").value = "";
+
+    // reload
+    loadTreatments();
+
+  }catch(err){
+
+    console.error("SAVE ERROR =", err);
+
+    alert("เชื่อมต่อเซิร์ฟเวอร์ไม่ได้");
+
+  }
+
+}
+
+
+// ================= LOAD =================
+async function loadTreatments(){
+
+  try{
+
+    const res = await fetch(
+      `http://127.0.0.1:8000/api/treatments/${citizenId}`
+    );
+
+    const data = await res.json();
+
+    console.log("TREATMENT =", data);
+
+    const container =
+    document.getElementById("treatmentList");
+
+    container.innerHTML = "";
+
+
+    // error
+    if(data.success === false){
+
+      container.innerHTML = `
+        <div class="no-data">
+          โหลดข้อมูลไม่สำเร็จ
+        </div>
+      `;
+
+      return;
+
+    }
+
+
+    // ไม่มีข้อมูล
+    if(!data.length){
+
+      container.innerHTML = `
+        <div class="no-data">
+          ยังไม่มีข้อมูลการรักษา
+        </div>
+      `;
+
+      return;
+
+    }
+
+
+    // sort ล่าสุดก่อน
+    data.sort((a,b)=>
+      new Date(b.created_at || 0) -
+      new Date(a.created_at || 0)
+    );
+
+
+    // LOOP
+    data.forEach(item => {
+
+      const card =
+      document.createElement("div");
+
+      card.className = "treatment-card";
+
+      card.innerHTML = `
+
+        <div class="treatment-date">
+          ${item.treatment_date || "-"}
+        </div>
+
+        <div class="treatment-name">
+          การรักษาจากแพทย์
+        </div>
+
+        <div class="treatment-text">
+          ${item.treatment_text || "-"}
+        </div>
+
+        <div class="treatment-more">
+          เพิ่มเติม...
+        </div>
+
+      `;
+
+
+      // DETAIL
+      card.querySelector(".treatment-more")
+      .addEventListener("click", () => {
+
+        openDetail(item);
+
+      });
+
+      container.appendChild(card);
+
+    });
+
+  }catch(err){
+
+    console.error("LOAD ERROR =", err);
+
+    document.getElementById("treatmentList").innerHTML = `
+      <div class="no-data">
+        โหลดข้อมูลไม่สำเร็จ
+      </div>
+    `;
+
+  }
+
+}
+
+
+// ================= START =================
+loadTreatments();
+
+</script>
+
+</body>
+</html>

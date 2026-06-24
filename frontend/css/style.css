@@ -1,0 +1,253 @@
+* {
+  box-sizing: border-box;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* ================= BODY ================= */
+body {
+  margin: 0;
+  background: #f3f4f6;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  height: 100vh;
+
+  overflow: hidden; /* 🔥 ห้าม scroll ทั้งหน้า */
+}
+
+/* ================= IPHONE FRAME ================= */
+.iphone-frame {
+  position: relative;
+  width: 375px;
+  height: 812px;
+
+  border: 10px solid black;
+  border-radius: 40px;
+
+  overflow: hidden;
+  background: white;
+}
+
+/* ================= SCREEN ================= */
+.screen {
+  width: 100%;
+  height: 100%;
+
+  border-radius: 28px;
+
+  background: linear-gradient(to bottom, #ffb9c4, #f3c4cb, #ffffff);
+
+  padding: 40px 24px 110px; /* 🔥 กันชน nav */
+
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  -webkit-overflow-scrolling: touch; /* 🔥 ฟีล iPhone */
+  overscroll-behavior: contain;      /* 🔥 กันลากทั้งหน้า */
+}
+
+/* 🔥 ซ่อน scrollbar (สำคัญมาก) */
+.screen::-webkit-scrollbar {
+  display: none;
+}
+
+/* ================= LOGO ================= */
+.logo {
+  text-align: center;
+  margin-bottom: 80px;
+}
+
+.logo img {
+  width: 200px;
+  opacity: 0.7;
+}
+
+/* ================= INPUT ================= */
+.input-group {
+  background: white;
+  border-radius: 30px;
+  display: flex;
+  align-items: center;
+  padding: 14px 18px;
+  margin-bottom: 18px;
+}
+
+.input-group input {
+  border: none;
+  outline: none;
+  flex: 1;
+  font-size: 16px;
+  margin-left: 10px;
+}
+
+/* ================= PASSWORD ================= */
+.toggle {
+  cursor: pointer;
+}
+
+/* ================= FORGOT ================= */
+.forgot {
+  text-align: right;
+  color: #ea4f67;
+  font-size: 14px;
+  margin-bottom: 40px;
+  cursor: pointer;
+}
+
+.forgot-link {
+  position: relative;
+  z-index: 5;
+  display: block;
+  width: fit-content;
+  min-height: 32px;
+  line-height: 20px;
+  margin: -4px 0 36px auto;
+  padding: 6px 0;
+  background: transparent;
+  border: 0;
+  color: #ea4f67;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  pointer-events: auto;
+  text-align: right;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.forgot-link:hover {
+  color: #c93f55;
+}
+
+/* ================= BUTTON ================= */
+.button-group {
+  display: flex;
+  justify-content: space-between;
+}
+
+button {
+  width: 48%;
+  padding: 14px 0;
+  border-radius: 30px;
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
+}
+
+.btn-outline {
+  background: #ffffff;
+  border: 3px solid #f47280;
+  color: #f47280;
+}
+
+.btn-fill {
+  background: #f47280;
+  border: 3px solid #ffffff;
+  color: white;
+}
+
+/* ================= REGISTER PANEL ================= */
+.panel {
+  position: absolute;
+  bottom: -100%;
+  left: 0;
+  width: 100%;
+  height: 75%;
+
+  background: #f4f4f4;
+  border-radius: 25px 25px 0 0;
+
+  transition: 0.4s;
+  z-index: 999;
+
+  overflow-y: auto;
+}
+
+/* 🔥 panel เลื่อนลื่น */
+.panel::-webkit-scrollbar {
+  display: none;
+}
+
+.panel.active {
+  bottom: 0;
+}
+
+#forgotPasswordPanel.active {
+  z-index: 1001;
+}
+
+#registerPanel.active {
+  z-index: 1000;
+}
+
+.panel-content {
+  padding: 20px;
+  text-align: center;
+}
+
+.panel input {
+  width: 90%;
+  padding: 12px;
+  margin: 10px 0;
+  border-radius: 25px;
+  border: 2px solid #ff7b8a;
+}
+
+.panel-hint {
+  width: 90%;
+  margin: 0 auto 8px;
+  color: #6b7280;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.otp-section {
+  display: none;
+  margin-top: 12px;
+}
+
+.otp-section.active {
+  display: block;
+}
+
+.forgot-step {
+  display: none;
+}
+
+.forgot-step.active {
+  display: block;
+}
+
+/* ================= ROW ================= */
+.row {
+  display: flex;
+  justify-content: space-between;
+}
+
+.row input {
+  width: 48%;
+}
+
+/* ================= SUBMIT ================= */
+.submit-btn {
+  margin-top: 15px;
+  padding: 12px 30px;
+  border-radius: 25px;
+  background: #ff7b8a;
+  border: 3px solid #ffffff;
+  color: white;
+  font-size: 16px;
+}
+
+/* ================= CLOSE ================= */
+.close-btn {
+  position: absolute;
+  left: 15px;
+  top: 15px;
+  font-size: 20px;
+  cursor: pointer;
+  color: #ff7b8a;
+  text-decoration: none;
+}

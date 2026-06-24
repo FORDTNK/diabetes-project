@@ -1,0 +1,74 @@
+.stats-container {
+  background: #f5f0f1;
+  margin: 18px;
+  margin-top: 10px;
+  border-radius: 28px;
+  padding: 18px;
+  height: calc(100% - 118px);
+  overflow-y: auto;
+}
+
+.stats-header {
+  margin-bottom: 18px;
+}
+
+.stats-title {
+  font-size: 25px;
+  font-weight: 800;
+  color: #7b2031;
+  line-height: 1.2;
+}
+
+.stats-subtitle {
+  margin-top: 6px;
+  font-size: 14px;
+  color: #555;
+  line-height: 1.5;
+}
+
+.chart-card {
+  background: #e8bcc5;
+  border-radius: 22px;
+  padding: 16px;
+  margin-bottom: 18px;
+}
+
+.chart-position {
+  font-size: 18px;
+  font-weight: 700;
+  color: #7b2031;
+  margin-bottom: 4px;
+}
+
+.chart-count {
+  font-size: 13px;
+  color: #444;
+  margin-bottom: 12px;
+}
+
+.chart-wrapper {
+  background: #fff;
+  border-radius: 16px;
+  padding: 10px 8px 6px;
+}
+
+.chart-wrapper canvas {
+  width: 100% !important;
+  height: 220px !important;
+}
+
+.no-data {
+  text-align: center;
+  margin-top: 100px;
+  font-size: 20px;
+  color: #666;
+}
+
+.stats-container::-webkit-scrollbar {
+  width: 5px;
+}
+
+.stats-container::-webkit-scrollbar-thumb {
+  background: #dca7b0;
+  border-radius: 20px;
+}

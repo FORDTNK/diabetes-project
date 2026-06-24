@@ -1,0 +1,345 @@
+
+/* ================= HEADER ================= */
+
+.detail-header{
+  height:30px;
+  color: #ffffff;
+  font-size: 13px;
+
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:20px;
+}
+
+.logo{
+  color:white;
+  font-size:28px;
+  font-weight:800;
+}
+
+.header-right{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.username{
+  color:white;
+  font-size:13px;
+}
+
+.profile{
+  width:42px;
+  height:42px;
+  border-radius:50%;
+  background:white;
+}
+
+
+/* ================= CONTENT ================= */
+
+.detail-container{
+
+  background:#f7f4f4;
+
+  width:calc(100% - 16px);
+
+  margin:8px auto 120px;
+
+  border-radius:28px;
+
+  padding:24px;
+
+  box-sizing:border-box;
+
+  /* 🔥 สำคัญ */
+  height:auto;
+  min-height:auto;
+
+  overflow:visible;
+}
+
+/* ================= BACK ================= */
+
+.back-btn{
+  font-size:20px;
+  color:#861b2f;
+  margin-bottom:10px;
+}
+
+
+/* ================= TITLE ================= */
+
+.detail-title{
+
+  font-size:26px;
+  font-weight:800;
+
+  color:#7d2030;
+
+  margin-bottom:12px;
+}
+
+
+/* ================= TOP ================= */
+
+.detail-top{
+
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+
+  font-size:17px;
+
+  margin-bottom:14px;
+}
+
+
+/* ================= IMAGE ================= */
+
+.detail-image{
+
+  width:230px;
+  height:230px;
+
+  object-fit:cover;
+
+  display:block;
+
+  margin:0 auto;
+
+  border-radius:0;
+
+  margin-bottom:18px;
+}
+
+
+/* ================= RESULT ================= */
+
+.result-title{
+
+  color:#7d2030;
+
+  font-size:22px;
+  font-weight:800;
+
+  margin-bottom:10px;
+}
+
+.result-grade{
+
+  color:#ff0000;
+
+  font-size:20px;
+
+  text-align:center;
+
+  margin-bottom:10px;
+}
+
+
+/* ================= ADVICE ================= */
+
+.advice-title{
+
+  text-align:center;
+
+  color:#f1be5c;
+
+  font-size:18px;
+  font-weight:800;
+
+  margin-bottom:2px;
+}
+
+.advice-box{
+
+  font-size:16px;
+
+  line-height:1.9;
+
+  color:#222;
+
+  text-align:left;
+
+  margin-bottom:30px;
+}
+
+
+/* ================= BUTTONS ================= */
+
+.detail-buttons{
+
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+
+  margin-top:10px;
+}
+
+.delete-btn{
+
+  width:100px;
+  height:50px;
+
+  border:none;
+  border-radius:18px;
+
+  background:#efc3cc;
+
+  color:#d10000;
+
+  font-size:18px;
+  font-weight:700;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+}
+
+.delete-btn i{
+  font-size:34px;
+}
+
+.print-btn{
+
+  width:100px;
+  height:50px;
+
+  border:none;
+  border-radius:18px;
+
+  background:#7d2030;
+
+  color:white;
+
+  font-size:18px;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+}
+
+.print-btn i{
+  font-size:34px;
+}
+
+
+/* ================= BOTTOM NAV ================= */
+
+.bottom-nav{
+
+  position:absolute;
+
+  bottom:0;
+
+  width:100%;
+  height:82px;
+
+  background:#ef4f68;
+
+  border-top-left-radius:34px;
+  border-top-right-radius:34px;
+
+  display:flex;
+  justify-content:space-around;
+  align-items:center;
+}
+
+.nav-btn{
+
+  color:white;
+
+  font-size:32px;
+}
+
+.nav-btn.active{
+
+  width:64px;
+  height:64px;
+
+  background:#d9a2ad;
+
+  border-radius:50%;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.scan-btn{
+
+  width:82px;
+  height:82px;
+
+  border-radius:50%;
+
+  background:#f5f1f1;
+
+  border:8px solid #f8b8c5;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  color:#00cc66;
+
+  font-size:38px;
+
+  margin-top:-40px;
+}
+
+/* ================= PRINT PDF ================= */
+
+@media print {
+
+  body{
+    background:white;
+  }
+
+  .iphone-frame{
+    width:100%;
+    height:auto;
+    border:none;
+    border-radius:0;
+    box-shadow:none;
+  }
+
+  .detail-header{
+    background:#7d2030 !important;
+    padding:20px;
+  }
+
+  .detail-container{
+    width:100%;
+    margin:0;
+    border-radius:0;
+    padding:20px;
+    background:white;
+  }
+
+  .bottom-nav,
+  .back-btn,
+  .detail-buttons{
+    display:none !important;
+  }
+
+  .detail-image{
+    width:250px;
+    height:auto;
+  }
+
+  .result-grade{
+    font-size:24px;
+    font-weight:bold;
+  }
+
+  .advice-box{
+    font-size:18px;
+    line-height:1.8;
+  }
+
+}

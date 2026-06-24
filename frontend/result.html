@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Result</title>
+
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/result.css">
+
+</head>
+
+<body>
+
+<div class="iphone-frame">
+
+  <div class="screen">
+
+    <!-- HEADER -->
+    <div class="header">
+
+      <h1>DFU Care+</h1>
+
+      <div style="display:flex; align-items:center; gap:10px;">
+
+        <div id="username"></div>
+
+        <div class="profile"></div>
+
+      </div>
+
+    </div>
+
+    <!-- IMAGE -->
+    <img id="preview" class="preview">
+
+    <!-- LOADING -->
+    <p id="status">
+      กำลังวิเคราะห์
+      <span id="dots"></span>
+    </p>
+
+    <!-- RESULT -->
+    <div id="resultBox" class="fade">
+
+      <p class="result-title">
+        ผลคาดการณ์ว่า!
+      </p>
+
+      <p id="grade" class="result-grade"></p>
+
+      <div class="card">
+
+        <div class="card-title">
+          คำแนะนำในการดูแลเบื้องต้น
+        </div>
+
+        <p id="advice"></p>
+
+      </div>
+
+      <div class="buttons">
+
+        <button
+          class="btn btn-cancel"
+          onclick="goBack()">
+
+          ไม่บันทึก
+
+        </button>
+
+        <button
+          class="btn btn-save"
+          onclick="openSaveModal()">
+
+          บันทึก
+
+        </button>
+
+      </div>
+
+    </div>
+
+    <!-- POPUP -->
+    <div id="saveModal" class="modal">
+
+      <div class="modal-content">
+
+        <h3>บันทึกผลการวิเคราะห์</h3>
+
+        <input
+          type="text"
+          id="woundLocation"
+          placeholder="กรอกตำแหน่งแผล เช่น นิ้วโป้งเท้าซ้าย">
+
+        <div class="modal-buttons">
+
+          <button
+            class="cancel-btn"
+            onclick="closeSaveModal()">
+
+            ยกเลิก
+
+          </button>
+
+          <button
+            class="confirm-btn"
+            onclick="saveAnalysis()">
+
+            ยืนยัน
+
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+
+// ================= LOGIN CHECK =================
+
+const citizenId =
+  localStorage.getItem("citizen_id");
+
+if (!citizenId) {
+
+  alert("กรุณาเข้าสู่ระบบก่อนใช้งาน");
+
+  window.location.href = "login.html";
+
+}
+
+
+// ================= USER =================
+
+const username =
+  localStorage.getItem("user_name") || "ผู้ใช้";
+
+document.getElementById("username").innerText =
+  username;
+
+
+// ================= GLOBAL =================
+
+let predictionData = {};
+let guidelineData = {};
+let uploadedFilename = "";
+
+
+// ================= LOAD IMAGE =================
+
+const imageData =
+  localStorage.getItem("image");
+
+if (!imageData) {
+
+  alert("ไม่พบรูปภาพ");
+
+}
+
+document.getElementById("preview").src =
+  imageData;
+
+
+// ================= BASE64 TO FILE =================
+
+function dataURLtoFile(dataurl, filename) {
+
+  let arr = dataurl.split(',');
+
+  let mime =
+    arr[0].match(/:(.*?);/)[1];
+
+  let bstr =
+    atob(arr[1]);
+
+  let n =
+    bstr.length;
+
+  let u8arr =
+    new Uint8Array(n);
+
+  while(n--){
+
+    u8arr[n] =
+      bstr.charCodeAt(n);
+
+  }
+
+  return new File(
+    [u8arr],
+    filename,
+    { type:mime }
+  );
+}
+
+
+// ================= CREATE FILE =================
+
+const file =
+  dataURLtoFile(imageData, `dfu_${Date.now()}.jpg`);
+
+
+// ================= PREVIEW =================
+
+document.getElementById("preview").src =
+  imageData;
+
+
+// ================= PREDICT =================
+
+const predictForm =
+  new FormData();
+
+predictForm.append("file", file);
+
+fetch("http://127.0.0.1:8000/api/predict", {
+
+  method: "POST",
+
+  body: predictForm
+
+})
+
+.then(res => res.json())
+
+.then(async data => {
+
+  predictionData = data;
+
+  setTimeout(async () => {
+
+    document.getElementById("status")
+      .style.display = "none";
+
+    document.getElementById("grade")
+      .innerText =
+      data.grade + " (" + data.percent + "%)";
+
+    const gradeNumber =
+      data.grade.split(" ")[1];
+
+    try {
+
+      const res = await fetch(
+        `http://127.0.0.1:8000/api/guideline/${gradeNumber}`
+      );
+
+      guidelineData =
+        await res.json();
+
+      if (
+        guidelineData &&
+        guidelineData.self_care_advice
+      ) {
+
+        document.getElementById("advice")
+          .innerText =
+          guidelineData.self_care_advice;
+
+      }
+
+      else {
+
+        document.getElementById("advice")
+          .innerText =
+          "ไม่พบคำแนะนำ";
+
+      }
+
+    }
+
+    catch(err){
+
+      console.error(err);
+
+      document.getElementById("advice")
+        .innerText =
+        "โหลดคำแนะนำไม่สำเร็จ";
+
+    }
+
+    document.getElementById("resultBox")
+      .classList.add("show");
+
+  }, 800);
+
+});
+
+
+// ================= BACK =================
+
+function goBack(){
+
+  const confirmLeave =
+    confirm("คุณต้องการกลับไปสแกนใหม่หรือไม่?");
+
+  if(confirmLeave){
+
+    localStorage.removeItem("image");
+
+    window.location.href =
+      "scan.html";
+
+  }
+
+}
+
+
+// ================= MODAL =================
+
+function openSaveModal(){
+
+  document.getElementById("saveModal")
+    .style.display = "flex";
+
+}
+
+function closeSaveModal(){
+
+  document.getElementById("saveModal")
+    .style.display = "none";
+
+}
+
+
+// ================= SAVE =================
+
+async function saveAnalysis(){
+
+  const woundLocation =
+    document.getElementById("woundLocation")
+    .value
+    .trim();
+
+  if(!woundLocation){
+
+    alert("กรุณากรอกตำแหน่งแผล");
+
+    return;
+
+  }
+
+  if(!citizenId || citizenId === "undefined"){
+
+    alert("กรุณาเข้าสู่ระบบก่อนบันทึก");
+
+    window.location.href = "login.html";
+
+    return;
+
+  }
+
+  try{
+
+    // ================= UPLOAD IMAGE =================
+
+    const uploadForm =
+      new FormData();
+
+    uploadForm.append("file", file);
+
+    const uploadRes =
+      await fetch(
+        "http://127.0.0.1:8000/api/upload",
+        {
+          method: "POST",
+          body: uploadForm
+        }
+      );
+
+    const uploadData =
+      await uploadRes.json();
+
+    console.log(uploadData);
+
+    uploadedFilename =
+      uploadData.filename;
+
+    // ================= SAVE DATABASE =================
+
+    const payload = {
+
+      citizen_id: citizenId,
+
+      grade:
+        predictionData.grade,
+
+      class_id:
+        predictionData.grade.split(" ")[1],
+
+      advice:
+        guidelineData.self_care_advice || "-",
+
+      wound_position:
+        woundLocation,
+
+      image_name:
+        uploadedFilename
+
+    };
+
+    const res =
+      await fetch(
+        "http://127.0.0.1:8000/api/save-analysis",
+        {
+
+          method: "POST",
+
+          headers:{
+            "Content-Type":"application/json"
+          },
+
+          body: JSON.stringify(payload)
+
+        }
+      );
+
+    const result =
+      await res.json();
+
+    console.log(result);
+
+    if(result.error){
+
+      alert(
+        "❌ บันทึกไม่สำเร็จ : "
+        + result.error
+      );
+
+      return;
+
+    }
+
+    // ================= SUCCESS =================
+
+    alert("✅ บันทึกสำเร็จ");
+
+    closeSaveModal();
+
+    localStorage.removeItem("image");
+
+    window.location.href =
+      "scan.html";
+
+  }
+
+  catch(err){
+
+    console.error(err);
+
+    alert("❌ เชื่อมต่อเซิร์ฟเวอร์ไม่ได้");
+
+  }
+
+}
+
+</script>
+
+</body>
+</html>

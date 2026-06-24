@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Stats</title>
+
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/home.css">
+<link rel="stylesheet" href="css/stats.css">
+
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+</head>
+
+<body>
+
+<div class="iphone-frame">
+
+  <div class="screen">
+
+    <div class="header">
+
+      <h1>DFU Care+</h1>
+
+      <div class="header-right">
+        <div class="user" id="username"></div>
+        <div class="profile"></div>
+      </div>
+
+    </div>
+
+    <div class="stats-container">
+
+      <div class="stats-header">
+        <div class="stats-title">กราฟความรุนแรงของแผล</div>
+        <div class="stats-subtitle">
+          แยกตามตำแหน่งแผล — ตำแหน่งเดียวกันจะแสดงในกราฟเดียวกัน
+        </div>
+      </div>
+
+      <div id="chartList"></div>
+
+    </div>
+
+  </div>
+
+  <div class="bottom-nav">
+
+    <div class="nav-btn" onclick="goPage('home')">
+      <i class="fa-solid fa-house"></i>
+    </div>
+
+    <div class="nav-btn" onclick="goPage('history')">
+      <i class="fa-solid fa-clock"></i>
+    </div>
+
+    <div class="scan-btn" onclick="goPage('scan')">
+      <i class="fa-solid fa-camera"></i>
+    </div>
+
+    <div class="nav-btn" onclick="goPage('treatment')">
+      <i class="fa-solid fa-folder"></i>
+    </div>
+
+    <div class="nav-btn active">
+      <i class="fa-solid fa-chart-line"></i>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+
+const citizenId = localStorage.getItem("citizen_id");
+
+if (!citizenId || citizenId === "undefined") {
+  window.location.href = "login.html";
+}
+
+document.getElementById("username").innerText =
+  localStorage.getItem("user_name") || "ผู้ใช้";
+
+function goPage(page) {
+  window.location.href = page + ".html";
+}
+
+function normalizePosition(position) {
+  return (position || "").trim().toLowerCase();
+}
+
+function formatThaiDate(dateString) {
+  const date = new Date(dateString);
+  return date.toLocaleDateString("th-TH", {
+    day: "numeric",
+    month: "short",
+    year: "2-digit"
+  });
+}
+
+function groupByPosition(records) {
+  const groups = {};
+
+  records.forEach(item => {
+    const key = normalizePosition(item.wound_position) || "ไม่ระบุตำแหน่ง";
+    const label = (item.wound_position || "ไม่ระบุตำแหน่ง").trim();
+
+    if (!groups[key]) {
+      groups[key] = {
+        label,
+        items: []
+      };
+    }
+
+    groups[key].items.push(item);
+  });
+
+  return Object.values(groups);
+}
+
+function renderCharts(groups) {
+  const container = document.getElementById("chartList");
+  container.innerHTML = "";
+
+  groups.forEach((group, index) => {
+    const sortedItems = group.items.sort(
+      (a, b) => new Date(a.created_at) - new Date(b.created_at)
+    );
+
+    const card = document.createElement("div");
+    card.className = "chart-card";
+
+    card.innerHTML = `
+      <div class="chart-position">${group.label}</div>
+      <div class="chart-count">${sortedItems.length} ครั้ง</div>
+      <div class="chart-wrapper">
+        <canvas id="chart-${index}"></canvas>
+      </div>
+    `;
+
+    container.appendChild(card);
+
+    const labels = sortedItems.map(item => formatThaiDate(item.created_at));
+    const grades = sortedItems.map(item => Number(item.class_id) || 0);
+
+    new Chart(document.getElementById(`chart-${index}`), {
+      type: "line",
+      data: {
+        labels,
+        datasets: [{
+          label: "Wagner Class",
+          data: grades,
+          borderColor: "#7b2031",
+          backgroundColor: "rgba(123, 32, 49, 0.12)",
+          pointBackgroundColor: "#f25f6c",
+          pointBorderColor: "#7b2031",
+          pointRadius: 5,
+          tension: 0.25,
+          fill: true
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: {
+            min: 0,
+            max: 5,
+            ticks: {
+              stepSize: 1
+            },
+            title: {
+              display: true,
+              text: "ระดับ Wagner"
+            }
+          },
+          x: {
+            title: {
+              display: true,
+              text: "วันที่วิเคราะห์"
+            }
+          }
+        },
+        plugins: {
+          legend: {
+            display: false
+          }
+        }
+      }
+    });
+  });
+}
+
+fetch(`http://127.0.0.1:8000/api/history/${citizenId}`)
+  .then(res => res.json())
+  .then(data => {
+    const container = document.getElementById("chartList");
+
+    if (!Array.isArray(data) || !data.length) {
+      container.innerHTML = `
+        <div class="no-data">
+          ยังไม่มีประวัติการวิเคราะห์
+        </div>
+      `;
+      return;
+    }
+
+    const groups = groupByPosition(data);
+
+    groups.sort((a, b) => a.label.localeCompare(b.label, "th"));
+
+    renderCharts(groups);
+  })
+  .catch(err => {
+    console.error(err);
+    alert("โหลดข้อมูลกราฟไม่สำเร็จ");
+  });
+
+</script>
+
+</body>
+</html>

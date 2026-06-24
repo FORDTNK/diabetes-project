@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>DFU Care+</title>
+
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/home.css">
+
+<!-- Font Awesome -->
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+</head>
+
+<body>
+
+<div class="iphone-frame">
+
+  <!-- SCREEN -->
+  <div class="screen">
+
+    <!-- HEADER -->
+    <div class="header">
+
+      <h1>DFU Care+</h1>
+
+      <div class="header-right">
+
+        <div class="user" id="username"></div>
+
+        <div class="profile"></div>
+
+      </div>
+
+    </div>
+
+
+    <!-- CONTENT -->
+    <div id="diabetes-container"></div>
+
+  </div>
+
+
+  <!-- BOTTOM NAV -->
+  <div class="bottom-nav">
+
+    <div class="nav-btn active"
+      data-page="home"
+      onclick="goPage('home')">
+
+      <i class="fa-solid fa-house"></i>
+
+    </div>
+
+
+    <div class="nav-btn"
+      data-page="history"
+      onclick="goPage('history')">
+
+      <i class="fa-solid fa-clock"></i>
+
+    </div>
+
+
+    <div class="scan-btn"
+      onclick="goPage('scan')">
+
+      <i class="fa-solid fa-camera"></i>
+
+    </div>
+
+
+    <div class="nav-btn"
+      data-page="files"
+      onclick="goPage('treatment')">
+
+      <i class="fa-solid fa-folder"></i>
+
+    </div>
+
+
+    <div class="nav-btn"
+      data-page="stats"
+      onclick="goPage('stats')">
+
+      <i class="fa-solid fa-chart-line"></i>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<script>
+
+// ================= CHECK LOGIN =================
+const citizenId = localStorage.getItem("citizen_id");
+
+if (!citizenId) {
+
+  alert("กรุณาเข้าสู่ระบบก่อน");
+
+  window.location.replace("login.html");
+}
+
+
+// ================= USER =================
+document.getElementById("username").innerText =
+  localStorage.getItem("user_name") || "ผู้ใช้";
+
+
+// ================= NAV ACTIVE =================
+const currentPage = window.location.pathname;
+
+document.querySelectorAll(".nav-btn").forEach(btn => {
+
+  const page = btn.getAttribute("data-page");
+
+  if (currentPage.includes(page)) {
+    btn.classList.add("active");
+  }
+
+});
+
+
+// ================= GO PAGE =================
+function goPage(page) {
+
+  window.location.href = page + ".html";
+
+}
+
+
+// ================= FETCH DATA =================
+fetch("http://127.0.0.1:8000/api/diabetes")
+
+.then(res => res.json())
+
+.then(data => {
+
+  const container =
+    document.getElementById("diabetes-container");
+
+  container.innerHTML = "";
+
+
+  data.forEach(item => {
+
+    const card = document.createElement("div");
+
+    card.className = "card";
+
+
+    card.innerHTML = `
+
+      <h2>${item.title}</h2>
+
+      ${item.image_url ? `
+        <img
+          src="http://127.0.0.1:8000${item.image_url}"
+          class="card-image"
+        />
+      ` : ""}
+
+      <p><b>${item.topic}</b></p>
+
+      <p>${item.content}</p>
+
+    `;
+
+    container.appendChild(card);
+
+  });
+
+})
+
+.catch(err => {
+
+  console.error("FETCH ERROR:", err);
+
+  alert("โหลดข้อมูลไม่สำเร็จ");
+
+});
+
+</script>
+
+</body>
+</html>

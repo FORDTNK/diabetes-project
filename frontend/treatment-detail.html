@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0">
+
+<title>Treatment Detail</title>
+
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/treatment-detail.css">
+
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+</head>
+
+<body>
+
+<div class="iphone-frame">
+
+  <div class="screen">
+
+    <!-- HEADER -->
+    <div class="header">
+
+  <h1>DFU Care+</h1>
+
+  <div class="header-right">
+
+    <div class="user" id="username">
+    </div>
+
+    <div class="profile"></div>
+
+  </div>
+
+</div>
+
+    <!-- CONTENT -->
+    <div class="detail-container">
+
+      <!-- BACK -->
+      <div class="back-btn"
+        onclick="goBack()">
+
+        <i class="fa-solid fa-arrow-left"></i>
+
+      </div>
+
+      <!-- DATE -->
+      <div class="detail-title">
+        วันที่ได้รับการรักษา
+      </div>
+
+      <div class="detail-box"
+        id="detailDate">
+      </div>
+
+      <!-- TREATMENT -->
+      <div class="green-title">
+        การรักษาจากแพทย์
+      </div>
+
+      <div class="detail-textbox"
+        id="detailTreatment">
+      </div>
+
+      <!-- ADVICE -->
+      <div class="yellow-title">
+        คำแนะนำจากแพทย์
+      </div>
+
+      <div class="detail-textbox"
+        id="detailAdvice">
+      </div>
+
+      <!-- DETAIL -->
+      <div class="red-title">
+        รายละเอียด
+      </div>
+
+      <div class="detail-textbox"
+        id="detailDetail">
+      </div>
+
+    </div>
+    <!-- BUTTONS -->
+<div class="detail-buttons">
+
+  <button
+    class="delete-btn"
+    onclick="deleteTreatment()"
+  >
+
+    <i class="fa-regular fa-trash-can"></i>
+
+    ลบ
+
+  </button>
+
+  <button
+    class="edit-btn"
+    onclick="editTreatment()"
+  >
+
+    <i class="fa-regular fa-pen-to-square"></i>
+
+    แก้ไข
+
+  </button>
+
+</div>
+
+  </div>
+
+</div>
+
+<script>
+
+// ================= USER =================
+document.getElementById("username").innerText =
+localStorage.getItem("user_name") || "ผู้ใช้";
+
+
+// ================= DATA =================
+const data =
+JSON.parse(
+  localStorage.getItem("selected_treatment")
+);
+
+
+// ================= SHOW =================
+document.getElementById("detailDate").innerText =
+data.treatment_date || "-";
+
+document.getElementById("detailTreatment").innerText =
+data.treatment_text || "-";
+
+document.getElementById("detailAdvice").innerText =
+data.doctor_advice || "-";
+
+document.getElementById("detailDetail").innerText =
+data.detail_text || "-";
+
+
+// ================= BACK =================
+function goBack(){
+
+  window.location.href =
+  "treatment.html";
+
+}
+
+// ================= DELETE =================
+async function deleteTreatment(){
+
+  const confirmDelete =
+    confirm("คุณต้องการลบข้อมูลนี้หรือไม่?");
+
+  if(!confirmDelete) return;
+
+  try{
+
+    const res = await fetch(
+      `http://127.0.0.1:8000/api/delete-treatment/${data.id}`,
+      {
+        method:"DELETE"
+      }
+    );
+
+    const result = await res.json();
+
+    alert("ลบสำเร็จ");
+
+    window.location.href =
+      "treatment.html";
+
+  }catch(err){
+
+    console.error(err);
+
+    alert("ลบไม่สำเร็จ");
+
+  }
+
+}
+
+
+// ================= EDIT =================
+function editTreatment(){
+
+  localStorage.setItem(
+    "edit_treatment",
+    JSON.stringify(data)
+  );
+
+  window.location.href =
+    "edit-treatment.html";
+
+}
+</script>
+
+</body>
+</html>

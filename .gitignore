@@ -1,0 +1,19 @@
+# Virtual Environment
+venv/
+venv311/
+env/
+.venv/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Node
+node_modules/
+
+# Environment variables
+.env
+
+# Uploads
+uploads/

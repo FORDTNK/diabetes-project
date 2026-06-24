@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<title>Loading...</title>
+</head>
+
+<body>
+
+<script>
+
+// 🔒 เช็ค login
+const citizenId = localStorage.getItem("citizen_id");
+
+if (citizenId) {
+  // ✅ login แล้ว → ไปหน้า home
+  window.location.href = "home.html";
+} else {
+  // ❌ ยังไม่ login → ไปหน้า login
+  window.location.href = "login.html";
+}
+
+</script>
+
+</body>
+</html>

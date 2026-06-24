@@ -1,0 +1,323 @@
+.history-container{
+  padding:18px;
+  overflow-y:auto;
+  height:calc(100% - 95px);
+}
+
+/* ================= HEADER ================= */
+
+.history-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:20px;
+}
+
+.history-title{
+  font-size:30px;
+  font-weight:800;
+  color:#7d2030;
+  line-height:1.2;
+}
+
+.history-filter{
+  font-size:16px;
+  color:#222;
+  font-weight:500;
+}
+
+/* ================= CARD ================= */
+
+.history-card{
+  background:#efc3cc;
+  border-radius:24px;
+  padding:18px;
+  margin-bottom:18px;
+  box-shadow:0 4px 10px rgba(0,0,0,0.06);
+  transition:0.2s;
+}
+
+.history-card:hover{
+  transform:translateY(-2px);
+}
+
+.history-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:12px;
+}
+
+/* ================= DATE ================= */
+
+.history-date{
+  font-size:18px;
+  font-weight:700;
+  color:#111;
+  line-height:1.4;
+}
+
+/* ================= POSITION ================= */
+
+.history-position{
+  font-size:18px;
+  color:#111;
+  text-align:right;
+  line-height:1.4;
+  min-width:70px;
+}
+
+/* ================= RESULT ================= */
+
+.history-grade-title{
+  margin-top:14px;
+  color:#7d2030;
+  font-size:22px;
+  font-weight:800;
+}
+
+.history-grade{
+  font-size:20px;
+  margin-top:6px;
+  color:#111;
+  font-weight:500;
+}
+
+/* ================= ADVICE ================= */
+
+.history-advice{
+  margin-top:16px;
+  background:white;
+  padding:16px;
+  border-radius:18px;
+  font-size:15px;
+  line-height:1.7;
+  color:#222;
+  box-shadow:0 2px 6px rgba(0,0,0,0.04);
+}
+
+/* ================= EMPTY ================= */
+
+.no-data{
+  text-align:center;
+  margin-top:120px;
+  font-size:22px;
+  color:#666;
+  font-weight:500;
+}
+
+/* ================= SCROLLBAR ================= */
+
+.history-container::-webkit-scrollbar{
+  width:6px;
+}
+
+.history-container::-webkit-scrollbar-thumb{
+  background:#d9a2ad;
+  border-radius:10px;
+}
+
+/* ================= MOBILE ================= */
+
+@media screen and (max-width:480px){
+
+  .history-title{
+    font-size:28px;
+  }
+
+  .history-date{
+    font-size:17px;
+  }
+
+  .history-position{
+    font-size:16px;
+  }
+
+  .history-grade-title{
+    font-size:20px;
+  }
+
+  .history-grade{
+    font-size:18px;
+  }
+
+  .history-advice{
+    font-size:14px;
+  }
+
+}
+
+/* ================= CONTAINER ================= */
+
+.history-container{
+  background:#f5f0f1;
+  margin:18px;
+  margin-top:10px;
+  border-radius:28px 28px 28px 28px;
+  padding:18px;
+  height:calc(100% - 118px);
+  overflow-y:auto;
+}
+
+/* ================= TOP ================= */
+
+.history-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:18px;
+}
+
+.history-title{
+  font-size:25px;
+  font-weight:800;
+  color:#7b2031;
+  line-height:1.2;
+}
+
+.history-filter{
+  font-size:16px;
+  color:#222;
+  font-weight:500;
+}
+
+/* ================= CARD ================= */
+
+.history-card{
+  background:#e8bcc5;
+  border-radius:22px;
+  padding:18px 20px;
+  margin-bottom:16px;
+}
+
+/* ================= TOP ROW ================= */
+
+.history-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  margin-bottom:10px;
+}
+
+/* ================= DATE ================= */
+
+.history-date{
+  font-size:17px;
+  font-weight:500;
+  color:#111;
+}
+
+/* ================= POSITION ================= */
+
+.history-position{
+  font-size:17px;
+  color:#111;
+  font-weight:500;
+}
+
+/* ================= RESULT ================= */
+
+.history-grade-title{
+  color:#7b2031;
+  font-size:18px;
+  font-weight:800;
+  margin-bottom:4px;
+}
+
+.history-grade{
+  font-size:16px;
+  color:#111;
+  font-weight:500;
+}
+
+/* ================= MORE ================= */
+
+.history-more{
+  text-align:right;
+  margin-top:6px;
+}
+
+.history-more a{
+  text-decoration:none;
+  color:#2a6cff;
+  font-size:14px;
+}
+
+/* ================= EMPTY ================= */
+
+.no-data{
+  text-align:center;
+  margin-top:100px;
+  font-size:20px;
+  color:#666;
+}
+
+/* ================= SCROLL ================= */
+
+.history-container::-webkit-scrollbar{
+  width:5px;
+}
+
+.history-container::-webkit-scrollbar-thumb{
+  background:#dca7b0;
+  border-radius:20px;
+}
+
+/* ================= DETAIL ================= */
+
+.history-detail{
+  max-height:0;
+  overflow:hidden;
+  transition:0.35s;
+}
+
+.history-detail.show{
+  max-height:500px;
+  margin-top:14px;
+}
+
+/* ================= DETAIL BOX ================= */
+
+.detail-box{
+  background:white;
+  border-radius:18px;
+  padding:16px;
+}
+
+/* ================= ROW ================= */
+
+.detail-row{
+  display:flex;
+  justify-content:space-between;
+  margin-bottom:10px;
+}
+
+.detail-label{
+  font-weight:700;
+  color:#7b2031;
+}
+
+.detail-value{
+  color:#222;
+}
+
+/* ================= ADVICE ================= */
+
+.detail-advice{
+  margin-top:12px;
+  background:#fff5f7;
+  padding:14px;
+  border-radius:14px;
+  line-height:1.7;
+  font-size:15px;
+}
+
+/* ================= MORE ================= */
+
+.history-more{
+  margin-top:10px;
+  text-align:right;
+  color:#2b67ff;
+  font-size:14px;
+  cursor:pointer;
+}

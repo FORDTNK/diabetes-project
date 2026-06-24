@@ -1,0 +1,359 @@
+/* ================= CONTAINER ================= */
+
+.treatment-container{
+
+  padding:20px;
+  padding-bottom:140px;
+
+  overflow-y:auto;
+  height:100%;
+}
+
+
+/* ================= HEADER ================= */
+
+.treatment-header{
+
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+
+  margin-bottom:24px;
+}
+
+.treatment-title{
+
+  font-size:22px;
+  font-weight:800;
+
+  color:#7d2030;
+}
+
+.treatment-filter{
+
+  font-size:16px;
+}
+
+
+/* ================= ADD ================= */
+
+.add-box{
+
+  width:100%;
+  height:70px;
+
+  background:#f3eded;
+
+  border-radius:22px;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  margin-bottom:20px;
+
+  cursor:pointer;
+}
+
+.add-box i{
+
+  font-size:40px;
+
+  color:#efc3cc;
+}
+
+
+/* ================= CARD ================= */
+
+.treatment-card{
+
+  background:#f3eded;
+
+  border-radius:22px;
+
+  padding:18px;
+
+  margin-bottom:18px;
+
+  position:relative;
+}
+
+
+/* ================= TEXT ================= */
+
+.treatment-date{
+
+  font-size:18px;
+
+  margin-bottom:10px;
+}
+
+.treatment-name{
+
+  color:#00bb44;
+
+  font-size:18px;
+  font-weight:800;
+
+  margin-bottom:6px;
+}
+
+.treatment-text{
+
+  font-size:16px;
+
+  color:#222;
+}
+
+
+/* ================= MORE ================= */
+
+.treatment-more{
+
+  position:absolute;
+
+  right:18px;
+  bottom:16px;
+
+  font-size:14px;
+
+  color:#4b6cff;
+
+  cursor:pointer;
+
+  font-weight:500;
+}
+
+/* ================= POPUP OVERLAY ================= */
+
+.popup{
+
+  position:absolute;
+
+  left:0;
+  top:0;
+
+  width:100%;
+  height:100%;
+
+  background:rgba(255, 255, 255, 0);
+
+  display:none;
+
+  justify-content:center;
+  align-items:flex-end;
+
+  z-index:999;
+
+  border-radius:55px;
+
+  overflow:hidden;
+}
+
+
+/* ================= POPUP ================= */
+
+.popup{
+
+position:absolute;
+
+left:0;
+bottom:0;
+
+display:none;
+
+justify-content:flex-end;
+align-items:flex-end;
+
+z-index:9999;
+
+/* 🔥 ทับ bottom nav */
+overflow:hidden;
+}
+
+
+/* ================= CARD ================= */
+
+.popup-card{
+
+position:absolute;
+
+bottom:0;
+left:0;
+
+width:100%;
+height:82%;
+
+/* 🔥 ลดความสูงลง */
+
+background:#f7f4f4;
+
+border-radius:34px 34px 0 0;
+
+padding:24px 22px 120px;
+
+box-sizing:border-box;
+
+/* 🔥 เอาแถบเลื่อนออก */
+overflow-y:auto;
+scrollbar-width:none;
+
+animation:slideUp .25s ease;
+}
+
+
+/* 🔥 ซ่อน scrollbar chrome */
+.popup-card::-webkit-scrollbar{
+display:none;
+}
+
+
+/* ================= ANIMATION ================= */
+
+@keyframes slideUp{
+
+from{
+transform:translateY(100%);
+}
+
+to{
+transform:translateY(0);
+}
+
+}
+
+
+/* ================= TITLE ================= */
+
+.popup-title{
+
+font-size:26px;
+font-weight:800;
+
+color:#7d2030;
+
+margin-bottom:20px;
+}
+
+
+/* ================= LABEL ================= */
+
+.input-title,
+.green-title,
+.yellow-title,
+.red-title{
+
+font-size:18px;
+font-weight:800;
+
+margin-top:16px;
+margin-bottom:10px;
+}
+
+.green-title{
+color:#00c853;
+}
+
+.yellow-title{
+color:#efb34e;
+}
+
+.red-title{
+color:#7d2030;
+}
+
+
+/* ================= INPUT ================= */
+
+.popup-input{
+
+width:100%;
+height:56px;
+
+border-radius:20px;
+border:1px solid #aaa;
+
+padding:0 18px;
+
+font-size:18px;
+
+background:white;
+
+outline:none;
+
+box-sizing:border-box;
+}
+
+
+/* ================= TEXTAREA ================= */
+
+.popup-textarea{
+
+width:100%;
+height:105px;
+
+/* 🔥 ลดความสูง */
+
+border-radius:20px;
+border:1px solid #aaa;
+
+padding:16px;
+
+font-size:17px;
+
+resize:none;
+
+font-family:inherit;
+
+background:white;
+
+outline:none;
+
+box-sizing:border-box;
+}
+
+
+/* ================= BUTTONS ================= */
+
+.popup-buttons{
+
+display:flex;
+justify-content:space-between;
+
+gap:18px;
+
+margin-top:26px;
+}
+
+
+/* ================= BUTTON ================= */
+
+.cancel-btn,
+.save-btn{
+
+flex:1;
+
+height:58px;
+
+border:none;
+border-radius:20px;
+
+font-size:22px;
+font-weight:700;
+
+cursor:pointer;
+}
+
+
+.cancel-btn{
+
+background:#efc3cc;
+color:white;
+}
+
+
+.save-btn{
+
+background:#7d2030;
+color:white;
+}

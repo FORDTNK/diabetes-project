@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scan</title>
+
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/scan.css">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+
+<div class="iphone-frame">
+
+  <div class="screen">
+
+    <div class="header">
+      <h1>DFU Care+</h1>
+
+      <div class="header-right">
+        <div class="user" id="username"></div>
+        <div class="profile"></div>
+      </div>
+    </div>
+
+    <div class="scan-image" id="scanImage">
+      <img id="scanPreview" src="assets/foot.png" alt="ตัวอย่างตำแหน่งถ่ายภาพเท้า">
+      <video id="cameraPreview" autoplay playsinline muted hidden></video>
+      <canvas id="captureCanvas" hidden></canvas>
+      <div class="crosshair" id="crosshair">+</div>
+    </div>
+
+    <div class="scan-text">
+      <h3 id="scanTitle">ก่อนถ่ายภาพ กรุณา</h3>
+
+      <p id="scanInstruction">
+        ล้างเท้าให้สะอาดและเช็ดให้แห้ง ถ่ายในที่แสงสว่างเพียงพอ หลีกเลี่ยงเงาหรือภาพมืดเกินไป
+        ถ่ายให้เห็นทั้งบริเวณแผล และให้เครื่องหมาย + อยู่ตรงกลางของแผล
+      </p>
+
+      <p class="warning">
+        แอปนี้เป็นการประเมินเบื้องต้น ไม่ใช่การวินิจฉัยจากแพทย์
+      </p>
+    </div>
+
+    <input type="file" id="fileInput" accept="image/*" hidden>
+
+    <div class="scan-buttons" id="pickButtons">
+      <button class="upload-btn" id="leftActionBtn" type="button" onclick="handleLeftAction()">
+        <i class="fa-solid fa-upload" id="leftActionIcon"></i>
+        <span id="leftActionText">อัปโหลดรูปภาพ</span>
+      </button>
+
+      <button class="camera-btn" id="rightActionBtn" type="button" onclick="handleRightAction()">
+        <i class="fa-solid fa-camera" id="rightActionIcon"></i>
+        <span id="rightActionText">ถ่ายรูป</span>
+      </button>
+    </div>
+
+    <div class="confirm-panel" id="confirmPanel" hidden>
+      <p class="confirm-text">ตรวจสอบรูปภาพให้ชัดเจนก่อนยืนยันเพื่อเริ่มวิเคราะห์ความรุนแรง</p>
+
+      <div class="confirm-buttons">
+        <button class="retake-btn" type="button" onclick="retakePhoto()">
+          <i class="fa-solid fa-rotate-left"></i>
+          ถ่ายใหม่
+        </button>
+
+        <button class="confirm-btn" type="button" onclick="confirmPhoto()">
+          <i class="fa-solid fa-circle-check"></i>
+          ยืนยันเพื่อวิเคราะห์
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="bottom-nav">
+
+    <div class="nav-btn" data-page="home">
+      <i class="fa-solid fa-house"></i>
+    </div>
+
+    <div class="nav-btn" data-page="history">
+      <i class="fa-solid fa-clock"></i>
+    </div>
+
+    <div class="scan-btn active" data-page="scan">
+      <i class="fa-solid fa-camera"></i>
+    </div>
+
+    <div class="nav-btn" data-page="treatment">
+      <i class="fa-solid fa-folder"></i>
+    </div>
+
+    <div class="nav-btn" data-page="stats">
+      <i class="fa-solid fa-chart-line"></i>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+
+const usernameEl = document.getElementById("username");
+const scanImage = document.getElementById("scanImage");
+const scanPreview = document.getElementById("scanPreview");
+const cameraPreview = document.getElementById("cameraPreview");
+const captureCanvas = document.getElementById("captureCanvas");
+const crosshair = document.getElementById("crosshair");
+const scanTitle = document.getElementById("scanTitle");
+const scanInstruction = document.getElementById("scanInstruction");
+const pickButtons = document.getElementById("pickButtons");
+const confirmPanel = document.getElementById("confirmPanel");
+const fileInput = document.getElementById("fileInput");
+const leftActionIcon = document.getElementById("leftActionIcon");
+const leftActionText = document.getElementById("leftActionText");
+const rightActionText = document.getElementById("rightActionText");
+
+let selectedImage = "";
+let cameraStream = null;
+let lastInputType = "camera";
+let isCameraMode = false;
+
+const citizenId = localStorage.getItem("citizen_id");
+
+if (!citizenId || citizenId === "undefined") {
+  alert("กรุณาเข้าสู่ระบบก่อนใช้งาน");
+  window.location.href = "login.html";
+}
+
+usernameEl.innerText = localStorage.getItem("user_name") || "ผู้ใช้";
+
+document.querySelectorAll(".nav-btn, .scan-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    stopCamera();
+    const page = btn.getAttribute("data-page");
+    window.location.href = page + ".html";
+  });
+});
+
+window.addEventListener("beforeunload", stopCamera);
+
+function handleLeftAction() {
+  if (isCameraMode) {
+    closeCamera();
+    return;
+  }
+
+  openFile();
+}
+
+function handleRightAction() {
+  if (isCameraMode) {
+    capturePhoto();
+    return;
+  }
+
+  openCamera();
+}
+
+function openFile() {
+  lastInputType = "file";
+  fileInput.click();
+}
+
+async function openCamera() {
+  lastInputType = "camera";
+
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    alert("เบราว์เซอร์นี้ไม่รองรับการเปิดกล้อง กรุณาเปิดผ่าน http://127.0.0.1:5500/scan.html หรือใช้การอัปโหลดรูปภาพ");
+    return;
+  }
+
+  try {
+    stopCamera();
+
+    cameraStream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: { ideal: "environment" },
+        width: { ideal: 1280 },
+        height: { ideal: 960 }
+      },
+      audio: false
+    });
+
+    cameraPreview.srcObject = cameraStream;
+    scanPreview.hidden = true;
+    cameraPreview.hidden = false;
+    scanImage.classList.add("camera-on");
+    scanImage.classList.remove("has-photo");
+    crosshair.style.display = "block";
+    pickButtons.hidden = false;
+    confirmPanel.hidden = true;
+    setCameraButtons();
+    scanTitle.innerText = "จัดตำแหน่งแผลให้อยู่กลางภาพ";
+    scanInstruction.innerText =
+      "มองภาพจากกล้องสดให้เห็นบริเวณแผลชัดเจน แสงเพียงพอ แล้วกดถ่ายภาพ";
+  }
+  catch (err) {
+    console.error(err);
+    alert("ไม่สามารถเปิดกล้องได้ กรุณาอนุญาตการใช้กล้อง หรือใช้อัปโหลดรูปภาพแทน");
+  }
+}
+
+function capturePhoto() {
+  if (!cameraStream || !cameraPreview.videoWidth) {
+    alert("กล้องยังไม่พร้อม กรุณารอสักครู่แล้วลองถ่ายอีกครั้ง");
+    return;
+  }
+
+  captureCanvas.width = cameraPreview.videoWidth;
+  captureCanvas.height = cameraPreview.videoHeight;
+
+  const context = captureCanvas.getContext("2d");
+  context.drawImage(cameraPreview, 0, 0, captureCanvas.width, captureCanvas.height);
+
+  selectedImage = captureCanvas.toDataURL("image/jpeg", 0.92);
+  stopCamera();
+  showConfirmation(selectedImage);
+}
+
+function closeCamera() {
+  stopCamera();
+  resetScanScreen();
+}
+
+function setDefaultButtons() {
+  isCameraMode = false;
+  leftActionIcon.className = "fa-solid fa-upload";
+  leftActionText.innerText = "อัปโหลดรูปภาพ";
+  rightActionText.innerText = "ถ่ายรูป";
+}
+
+function setCameraButtons() {
+  isCameraMode = true;
+  leftActionIcon.className = "fa-solid fa-xmark";
+  leftActionText.innerText = "ยกเลิก";
+  rightActionText.innerText = "ถ่ายรูป";
+}
+
+function stopCamera() {
+  if (cameraStream) {
+    cameraStream.getTracks().forEach(track => track.stop());
+    cameraStream = null;
+  }
+
+  cameraPreview.srcObject = null;
+}
+
+function handleImageSelect(input) {
+  const file = input.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    selectedImage = e.target.result;
+    stopCamera();
+    showConfirmation(selectedImage);
+    input.value = "";
+  };
+  reader.readAsDataURL(file);
+}
+
+function showConfirmation(imageData) {
+  scanPreview.src = imageData;
+  scanPreview.hidden = false;
+  cameraPreview.hidden = true;
+  scanImage.classList.add("has-photo");
+  scanImage.classList.remove("camera-on");
+  crosshair.style.display = "none";
+  pickButtons.hidden = true;
+  setDefaultButtons();
+  confirmPanel.hidden = false;
+  scanTitle.innerText = "ยืนยันรูปภาพ";
+  scanInstruction.innerText =
+    "หากภาพชัด เห็นบริเวณแผลครบ และแสงเพียงพอ ให้กดยืนยันเพื่อเริ่มวิเคราะห์ความรุนแรง";
+}
+
+function resetScanScreen() {
+  selectedImage = "";
+  scanPreview.src = "assets/foot.png";
+  scanPreview.hidden = false;
+  cameraPreview.hidden = true;
+  scanImage.classList.remove("has-photo", "camera-on");
+  crosshair.style.display = "block";
+  pickButtons.hidden = false;
+  setDefaultButtons();
+  confirmPanel.hidden = true;
+  scanTitle.innerText = "ก่อนถ่ายภาพ กรุณา";
+  scanInstruction.innerText =
+    "ล้างเท้าให้สะอาดและเช็ดให้แห้ง ถ่ายในที่แสงสว่างเพียงพอ หลีกเลี่ยงเงาหรือภาพมืดเกินไป ถ่ายให้เห็นทั้งบริเวณแผล และให้เครื่องหมาย + อยู่ตรงกลางของแผล";
+}
+
+function retakePhoto() {
+  resetScanScreen();
+
+  if (lastInputType === "camera") {
+    window.setTimeout(openCamera, 150);
+  }
+}
+
+function confirmPhoto() {
+  if (!selectedImage) {
+    alert("กรุณาถ่ายรูปหรือเลือกรูปภาพก่อน");
+    return;
+  }
+
+  localStorage.setItem("image", selectedImage);
+  window.location.href = "result.html";
+}
+
+fileInput.addEventListener("change", function() {
+  handleImageSelect(this);
+});
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>History</title>
+
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/home.css">
+<link rel="stylesheet" href="css/history.css">
+
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+</head>
+
+<body>
+
+<div class="iphone-frame">
+
+  <div class="screen">
+
+    <!-- HEADER -->
+    <div class="header">
+
+      <h1>DFU Care+</h1>
+
+      <div class="header-right">
+        <div class="user" id="username"></div>
+        <div class="profile"></div>
+      </div>
+
+    </div>
+
+    <!-- CONTENT -->
+    <div class="history-container">
+
+      <!-- TOP -->
+      <div class="history-header">
+
+        <div class="history-title">
+          ประวัติการวิเคราะห์
+        </div>
+
+        <div class="history-filter">
+          วันที่ล่าสุด
+        </div>
+
+      </div>
+
+      <!-- LIST -->
+      <div id="historyList"></div>
+
+    </div>
+
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <div class="bottom-nav">
+
+    <div class="nav-btn" onclick="goPage('home')">
+      <i class="fa-solid fa-house"></i>
+    </div>
+
+    <div class="nav-btn active">
+      <i class="fa-solid fa-clock"></i>
+    </div>
+
+    <div class="scan-btn" onclick="goPage('scan')">
+      <i class="fa-solid fa-camera"></i>
+    </div>
+
+    <div class="nav-btn"
+      data-page="files"
+      onclick="goPage('treatment')">
+
+      <i class="fa-solid fa-folder"></i>
+
+    </div>
+
+
+    <div class="nav-btn"
+      onclick="goPage('stats')">
+
+      <i class="fa-solid fa-chart-line"></i>
+
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+
+// ================= LOGIN CHECK =================
+const citizenId = localStorage.getItem("citizen_id");
+
+if (!citizenId) {
+  window.location.href = "login.html";
+}
+
+
+// ================= USER =================
+document.getElementById("username").innerText =
+  localStorage.getItem("user_name") || "ผู้ใช้";
+
+
+// ================= GO PAGE =================
+function goPage(page){
+  window.location.href = page + ".html";
+}
+
+
+// ================= OPEN DETAIL =================
+function openDetail(item){
+
+  // 🔥 save data
+  localStorage.setItem(
+    "selected_history",
+    JSON.stringify(item)
+  );
+
+  // 🔥 go page
+  window.location.href =
+    "history-detail.html";
+}
+
+
+// ================= LOAD HISTORY =================
+fetch(`http://127.0.0.1:8000/api/history/${citizenId}`)
+
+.then(res => res.json())
+
+.then(data => {
+
+  const container = document.getElementById("historyList");
+
+  // 🔥 เรียงล่าสุดก่อน
+  data.sort((a, b) =>
+    new Date(b.created_at) - new Date(a.created_at)
+  );
+
+  // ================= NO DATA =================
+  if (!data.length) {
+
+    container.innerHTML = `
+      <div class="no-data">
+        ยังไม่มีประวัติการวิเคราะห์
+      </div>
+    `;
+
+    return;
+  }
+
+// ================= LOOP CARD =================
+data.forEach(item => {
+
+  const date = new Date(item.created_at);
+
+  const thaiDate = date.toLocaleDateString("th-TH", {
+    year:'numeric',
+    month:'long',
+    day:'numeric'
+  });
+
+  const card = document.createElement("div");
+
+  card.className = "history-card";
+
+  card.innerHTML = `
+  
+    <div class="history-top">
+
+      <div class="history-date">
+        วันที่ ${thaiDate}
+      </div>
+
+      <div class="history-position">
+        ${item.wound_position || "-"}
+      </div>
+
+    </div>
+
+    <div class="history-grade-title">
+      ผลคาดการณ์ว่า!
+    </div>
+
+    <div class="history-grade">
+      Wagner Graed : Class ${item.class_id}
+    </div>
+
+    <!-- BUTTON -->
+    <div class="history-more">
+      เพิ่มเติม...
+    </div>
+
+  `;
+
+  // 🔥 ส่งข้อมูล item ของ card นี้
+  card.querySelector(".history-more")
+    .addEventListener("click", () => {
+
+      localStorage.setItem(
+        "selected_history",
+        JSON.stringify(item)
+      );
+
+      window.location.href =
+        "history-detail.html";
+
+    });
+
+  container.appendChild(card);
+
+});
+
+})
+
+.catch(err => {
+
+  console.error(err);
+
+  alert("โหลดประวัติไม่สำเร็จ");
+
+});
+
+</script>
+
+</body>
+</html>

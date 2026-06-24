@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DFU Care+</title>
+
+  <link rel="stylesheet" href="css/style.css?v=forgot-flow-2" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+
+<div class="iphone-frame">
+
+  <div class="screen">
+
+    <div class="logo">
+      <img src="assets/logo.png" alt="DFU Care+" />
+    </div>
+
+    <form id="loginForm">
+
+      <div class="input-group">
+        <i class="fa-solid fa-user"></i>
+        <input id="citizen_id" type="text" placeholder="เลขบัตรประจำตัวประชาชน" required />
+      </div>
+
+      <div class="input-group">
+        <i class="fa-solid fa-lock"></i>
+        <input id="password" type="password" placeholder="รหัสผ่าน" required />
+        <span class="toggle" onclick="togglePassword()">
+          <i class="fa-solid fa-eye"></i>
+        </span>
+      </div>
+
+      <span id="forgotPasswordLink" class="forgot-link" role="button" tabindex="0">
+        ลืมรหัสผ่าน?
+      </span>
+
+      <div class="button-group">
+        <button type="button" class="btn-outline" onclick="openRegister()">ลงทะเบียน</button>
+        <button type="submit" class="btn-fill">เข้าสู่ระบบ</button>
+      </div>
+
+    </form>
+
+  </div>
+
+  <div id="forgotPasswordPanel" class="panel">
+
+    <div class="panel-content">
+
+      <a href="#" class="close-btn" onclick="closeForgotPassword(); return false;" aria-label="ย้อนกลับ">
+        <i class="fa-solid fa-arrow-left"></i>
+      </a>
+
+      <h2 style="color:#ff7b8a;">ลืมรหัสผ่าน</h2>
+
+      <div id="forgotStepCitizen" class="forgot-step active">
+        <p class="panel-hint">กรอกเลขบัตรประชาชน เพื่อตรวจสอบบัญชีผู้ใช้</p>
+        <input id="forgot_citizen_id" placeholder="เลขบัตรประชาชน">
+        <button type="button" class="submit-btn" onclick="checkForgotCitizen()">
+          ตรวจสอบบัญชี
+        </button>
+      </div>
+
+      <div id="forgotStepEmail" class="forgot-step">
+        <p class="panel-hint">พบบัญชีแล้ว กรอก Gmail หรืออีเมลที่ต้องการรับ OTP</p>
+        <input id="forgot_email" type="email" placeholder="example@gmail.com">
+        <button type="button" class="submit-btn" onclick="requestForgotOtp()">
+          ส่งรหัส OTP
+        </button>
+      </div>
+
+      <div id="forgotStepOtp" class="forgot-step">
+        <p class="panel-hint">กรอกรหัส OTP 6 หลักที่ได้รับทางอีเมล</p>
+        <input id="forgot_otp" placeholder="รหัส OTP 6 หลัก" maxlength="6">
+
+        <button type="button" class="submit-btn" onclick="verifyForgotOtp()">
+          ตรวจสอบ OTP
+        </button>
+      </div>
+
+      <div id="forgotStepNewPassword" class="forgot-step">
+        <p class="panel-hint">ตั้งรหัสผ่านใหม่สำหรับบัญชีนี้</p>
+        <input id="forgot_new_password" type="password" placeholder="รหัสผ่านใหม่">
+        <input id="forgot_confirm_password" type="password" placeholder="ยืนยันรหัสผ่านใหม่">
+
+        <button type="button" class="submit-btn" onclick="resetForgotPassword()">
+          เปลี่ยนรหัสผ่าน
+        </button>
+      </div>
+
+    </div>
+
+  </div>
+
+  <div id="registerPanel" class="panel">
+
+    <div class="panel-content">
+
+      <div class="close-btn" onclick="closeRegister()">
+        <i class="fa-solid fa-arrow-left"></i>
+      </div>
+
+      <h2 style="color:#ff7b8a;">ลงทะเบียน</h2>
+
+      <input id="reg_citizen_id" placeholder="เลขบัตรประชาชน">
+      <input id="reg_password" type="password" placeholder="รหัสผ่าน">
+      <input id="reg_confirm_password" type="password" placeholder="ยืนยันรหัสผ่าน">
+      <input id="reg_first_name" placeholder="ชื่อ">
+      <input id="reg_last_name" placeholder="สกุล">
+      <input id="reg_birth_date" placeholder="วัน/เดือน/ปีเกิด เช่น 1990-01-15">
+      <input id="reg_phone" placeholder="เบอร์โทรศัพท์">
+
+      <button type="button" class="submit-btn" onclick="registerUser()">
+        ยืนยัน
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+<script src="js/login.js?v=forgot-flow-2"></script>
+
+</body>
+</html>
