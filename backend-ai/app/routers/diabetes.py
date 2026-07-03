@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, UploadFile, File
 from sqlalchemy import text
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 from datetime import datetime
 
 from app.db.database import get_db
@@ -8,6 +9,7 @@ from app.core.config import BACKEND_AI_DIR, UPLOADS_DIR
 from app.models.diabetes_info import DiabetesInfo
 from app.models.analysis_history import AnalysisHistory
 from app.models.guideline import Guideline
+from app.deps.auth import get_current_user_id
 
 import shutil
 import tensorflow as tf
@@ -192,30 +194,37 @@ def get_guideline(
     }
 
 
+def _format_history_item(item):
+    return {
+        "id": item.id,
+        "user_id": item.user_id,
+        "grade": item.grade,
+        "class_id": item.class_id,
+        "advice": item.advice,
+        "wound_position": item.wound_position,
+        "image_name": item.image_name,
+        "created_at": item.created_at,
+    }
+
+
 # ================== SAVE ANALYSIS ==================
 @router.post("/save-analysis")
 def save_analysis(
     data: dict,
-    db: Session = Depends(get_db)
+    user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
 ):
 
     try:
 
-        citizen_id = (data.get("citizen_id") or "").strip()
-
-        if not citizen_id or citizen_id == "undefined":
-            return {
-                "error": "ไม่พบเลขบัตรประชาชน กรุณาเข้าสู่ระบบใหม่"
-            }
-
         new_record = AnalysisHistory(
-            citizen_id=citizen_id,
+            user_id=user_id,
             grade=data.get("grade"),
             class_id=data.get("class_id"),
             advice=data.get("advice"),
             wound_position=data.get("wound_position"),
             image_name=data.get("image_name"),
-            created_at=datetime.now()
+            created_at=datetime.now(),
         )
 
         db.add(new_record)
@@ -226,7 +235,15 @@ def save_analysis(
 
         return {
             "message": "saved successfully",
-            "id": new_record.id
+            "id": new_record.id,
+        }
+
+    except IntegrityError:
+
+        db.rollback()
+
+        return {
+            "error": "ไม่พบผู้ใช้ในระบบ กรุณาเข้าสู่ระบบใหม่",
         }
 
     except Exception as e:
@@ -236,36 +253,25 @@ def save_analysis(
         print("SAVE ERROR =", e)
 
         return {
-            "error": str(e)
+            "error": str(e),
         }
 
 
 # ================== GET HISTORY ==================
-@router.get("/history/{citizen_id}")
+@router.get("/history")
 def get_history(
-    citizen_id: str,
-    db: Session = Depends(get_db)
+    user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
 ):
 
-    data = db.query(AnalysisHistory).filter(
-        AnalysisHistory.citizen_id == citizen_id
-    ).order_by(
-        AnalysisHistory.created_at.desc()
-    ).all()
+    data = (
+        db.query(AnalysisHistory)
+        .filter(AnalysisHistory.user_id == user_id)
+        .order_by(AnalysisHistory.created_at.desc())
+        .all()
+    )
 
-    return [
-        {
-            "id": item.id,
-            "citizen_id": item.citizen_id,
-            "grade": item.grade,
-            "class_id": item.class_id,
-            "advice": item.advice,
-            "wound_position": item.wound_position,
-            "image_name": item.image_name,
-            "created_at": item.created_at
-        }
-        for item in data
-    ]
+    return [_format_history_item(item) for item in data]
 
 
 # ================== HISTORY DETAIL ==================
@@ -285,16 +291,7 @@ def history_detail(
             "error": "not found"
         }
 
-    return {
-        "id": data.id,
-        "citizen_id": data.citizen_id,
-        "grade": data.grade,
-        "class_id": data.class_id,
-        "advice": data.advice,
-        "wound_position": data.wound_position,
-        "image_name": data.image_name,
-        "created_at": data.created_at
-    }
+    return _format_history_item(data)
 
 
 # ================== DELETE HISTORY ==================

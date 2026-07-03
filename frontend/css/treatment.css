@@ -109,18 +109,15 @@
 /* ================= MORE ================= */
 
 .treatment-more{
-
   position:absolute;
-
   right:18px;
   bottom:16px;
-
+  padding: 0;
+  border: none;
+  background: none;
   font-size:14px;
-
   color:#4b6cff;
-
   cursor:pointer;
-
   font-weight:500;
 }
 

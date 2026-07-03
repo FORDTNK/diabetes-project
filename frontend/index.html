@@ -10,9 +10,9 @@
 <script>
 
 // 🔒 เช็ค login
-const citizenId = localStorage.getItem("citizen_id");
+const userId = localStorage.getItem("user_id");
 
-if (citizenId) {
+if (userId) {
   // ✅ login แล้ว → ไปหน้า home
   window.location.href = "home.html";
 } else {

@@ -28,7 +28,7 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
       <h1>DFU Care+</h1>
 
       <div class="header-right">
-        <div class="user" id="username"></div>
+        <span class="header__username" data-user-name></span>
         <div class="profile"></div>
       </div>
 
@@ -92,19 +92,18 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
 
 </div>
 
+<script src="js/session.js"></script>
+
 <script>
 
 // ================= LOGIN CHECK =================
-const citizenId = localStorage.getItem("citizen_id");
-
-if (!citizenId) {
-  window.location.href = "login.html";
+if (!requireLogin()) {
+  throw new Error("login required");
 }
 
 
 // ================= USER =================
-document.getElementById("username").innerText =
-  localStorage.getItem("user_name") || "ผู้ใช้";
+setUserNameDisplay();
 
 
 // ================= GO PAGE =================
@@ -129,7 +128,9 @@ function openDetail(item){
 
 
 // ================= LOAD HISTORY =================
-fetch(`http://127.0.0.1:8000/api/history/${citizenId}`)
+fetch("http://127.0.0.1:8000/api/history", {
+  headers: getAuthHeaders(),
+})
 
 .then(res => res.json())
 
@@ -168,6 +169,7 @@ data.forEach(item => {
   const card = document.createElement("div");
 
   card.className = "history-card";
+  card.dataset.historyId = item.id;
 
   card.innerHTML = `
   
@@ -192,14 +194,14 @@ data.forEach(item => {
     </div>
 
     <!-- BUTTON -->
-    <div class="history-more">
+    <button type="button" class="history-more" data-action="open-detail">
       เพิ่มเติม...
-    </div>
+    </button>
 
   `;
 
   // 🔥 ส่งข้อมูล item ของ card นี้
-  card.querySelector(".history-more")
+  card.querySelector('[data-action="open-detail"]')
     .addEventListener("click", () => {
 
       localStorage.setItem(

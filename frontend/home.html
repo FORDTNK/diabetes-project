@@ -30,7 +30,7 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
 
       <div class="header-right">
 
-        <div class="user" id="username"></div>
+        <span class="header__username" data-user-name></span>
 
         <div class="profile"></div>
 
@@ -96,22 +96,18 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
 </div>
 
 
+<script src="js/session.js"></script>
+
 <script>
 
 // ================= CHECK LOGIN =================
-const citizenId = localStorage.getItem("citizen_id");
-
-if (!citizenId) {
-
-  alert("กรุณาเข้าสู่ระบบก่อน");
-
-  window.location.replace("login.html");
+if (!requireLogin()) {
+  throw new Error("login required");
 }
 
 
 // ================= USER =================
-document.getElementById("username").innerText =
-  localStorage.getItem("user_name") || "ผู้ใช้";
+setUserNameDisplay();
 
 
 // ================= NAV ACTIVE =================

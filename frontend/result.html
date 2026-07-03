@@ -25,7 +25,7 @@
 
       <div style="display:flex; align-items:center; gap:10px;">
 
-        <div id="username"></div>
+        <span class="header__username" data-user-name></span>
 
         <div class="profile"></div>
 
@@ -34,22 +34,22 @@
     </div>
 
     <!-- IMAGE -->
-    <img id="preview" class="preview">
+    <img class="preview" data-result-preview alt="ภาพที่วิเคราะห์">
 
     <!-- LOADING -->
-    <p id="status">
+    <p data-result-status>
       กำลังวิเคราะห์
-      <span id="dots"></span>
+      <span data-loading-dots></span>
     </p>
 
     <!-- RESULT -->
-    <div id="resultBox" class="fade">
+    <div class="fade" data-result-box>
 
       <p class="result-title">
         ผลคาดการณ์ว่า!
       </p>
 
-      <p id="grade" class="result-grade"></p>
+      <p class="result-grade" data-result-grade></p>
 
       <div class="card">
 
@@ -57,7 +57,7 @@
           คำแนะนำในการดูแลเบื้องต้น
         </div>
 
-        <p id="advice"></p>
+        <p data-result-advice></p>
 
       </div>
 
@@ -84,7 +84,7 @@
     </div>
 
     <!-- POPUP -->
-    <div id="saveModal" class="modal">
+    <div class="modal" data-save-modal hidden>
 
       <div class="modal-content">
 
@@ -92,7 +92,7 @@
 
         <input
           type="text"
-          id="woundLocation"
+          data-field="wound-location"
           placeholder="กรอกตำแหน่งแผล เช่น นิ้วโป้งเท้าซ้าย">
 
         <div class="modal-buttons">
@@ -123,29 +123,27 @@
 
 </div>
 
+<script src="js/session.js"></script>
+
 <script>
 
 // ================= LOGIN CHECK =================
 
-const citizenId =
-  localStorage.getItem("citizen_id");
-
-if (!citizenId) {
-
-  alert("กรุณาเข้าสู่ระบบก่อนใช้งาน");
-
-  window.location.href = "login.html";
-
+if (!requireLogin()) {
+  throw new Error("login required");
 }
 
 
 // ================= USER =================
 
-const username =
-  localStorage.getItem("user_name") || "ผู้ใช้";
+setUserNameDisplay();
 
-document.getElementById("username").innerText =
-  username;
+const previewEl = document.querySelector("[data-result-preview]");
+const statusEl = document.querySelector("[data-result-status]");
+const gradeEl = document.querySelector("[data-result-grade]");
+const adviceEl = document.querySelector("[data-result-advice]");
+const resultBoxEl = document.querySelector("[data-result-box]");
+const saveModalEl = document.querySelector("[data-save-modal]");
 
 
 // ================= GLOBAL =================
@@ -166,8 +164,7 @@ if (!imageData) {
 
 }
 
-document.getElementById("preview").src =
-  imageData;
+previewEl.src = imageData;
 
 
 // ================= BASE64 TO FILE =================
@@ -211,8 +208,7 @@ const file =
 
 // ================= PREVIEW =================
 
-document.getElementById("preview").src =
-  imageData;
+previewEl.src = imageData;
 
 
 // ================= PREDICT =================
@@ -238,11 +234,9 @@ fetch("http://127.0.0.1:8000/api/predict", {
 
   setTimeout(async () => {
 
-    document.getElementById("status")
-      .style.display = "none";
+    statusEl.style.display = "none";
 
-    document.getElementById("grade")
-      .innerText =
+    gradeEl.innerText =
       data.grade + " (" + data.percent + "%)";
 
     const gradeNumber =
@@ -262,16 +256,14 @@ fetch("http://127.0.0.1:8000/api/predict", {
         guidelineData.self_care_advice
       ) {
 
-        document.getElementById("advice")
-          .innerText =
+        adviceEl.innerText =
           guidelineData.self_care_advice;
 
       }
 
       else {
 
-        document.getElementById("advice")
-          .innerText =
+        adviceEl.innerText =
           "ไม่พบคำแนะนำ";
 
       }
@@ -282,14 +274,12 @@ fetch("http://127.0.0.1:8000/api/predict", {
 
       console.error(err);
 
-      document.getElementById("advice")
-        .innerText =
+      adviceEl.innerText =
         "โหลดคำแนะนำไม่สำเร็จ";
 
     }
 
-    document.getElementById("resultBox")
-      .classList.add("show");
+    resultBoxEl.classList.add("show");
 
   }, 800);
 
@@ -319,15 +309,15 @@ function goBack(){
 
 function openSaveModal(){
 
-  document.getElementById("saveModal")
-    .style.display = "flex";
+  saveModalEl.hidden = false;
+  saveModalEl.style.display = "flex";
 
 }
 
 function closeSaveModal(){
 
-  document.getElementById("saveModal")
-    .style.display = "none";
+  saveModalEl.hidden = true;
+  saveModalEl.style.display = "none";
 
 }
 
@@ -337,7 +327,7 @@ function closeSaveModal(){
 async function saveAnalysis(){
 
   const woundLocation =
-    document.getElementById("woundLocation")
+    document.querySelector("[data-field='wound-location']")
     .value
     .trim();
 
@@ -349,7 +339,7 @@ async function saveAnalysis(){
 
   }
 
-  if(!citizenId || citizenId === "undefined"){
+  if(!getUserId()){
 
     alert("กรุณาเข้าสู่ระบบก่อนบันทึก");
 
@@ -389,8 +379,6 @@ async function saveAnalysis(){
 
     const payload = {
 
-      citizen_id: citizenId,
-
       grade:
         predictionData.grade,
 
@@ -415,9 +403,9 @@ async function saveAnalysis(){
 
           method: "POST",
 
-          headers:{
+          headers: getAuthHeaders({
             "Content-Type":"application/json"
-          },
+          }),
 
           body: JSON.stringify(payload)
 

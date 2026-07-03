@@ -29,7 +29,7 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
 
       <div class="header-right">
 
-        <div class="user" id="username"></div>
+        <span class="header__username" data-user-name></span>
 
         <div class="profile"></div>
 
@@ -82,8 +82,8 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
 
       <input
         type="date"
-        id="treatmentDate"
         class="popup-input"
+        data-field="treatment-date"
       >
 
       <!-- TREATMENT -->
@@ -92,8 +92,8 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
       </div>
 
       <textarea
-        id="treatmentText"
         class="popup-textarea"
+        data-field="treatment-text"
         placeholder="เช่น หมอทำความสะอาดแผล..."
       ></textarea>
 
@@ -103,8 +103,8 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
       </div>
 
       <textarea
-        id="doctorAdvice"
         class="popup-textarea"
+        data-field="doctor-advice"
         placeholder="เช่น ลดแรงกดที่เท้า..."
       ></textarea>
 
@@ -114,8 +114,8 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
       </div>
 
       <textarea
-        id="detailText"
         class="popup-textarea"
+        data-field="detail-text"
         placeholder="เช่น ตำแหน่งแผล..."
       ></textarea>
 
@@ -185,23 +185,18 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
 </div>
 
 
+<script src="js/session.js"></script>
+
 <script>
 
 // ================= LOGIN CHECK =================
-const citizenId = localStorage.getItem("citizen_id");
-
-if(!citizenId){
-
-  alert("กรุณาเข้าสู่ระบบ");
-
-  window.location.href = "login.html";
-
+if (!requireLogin()) {
+  throw new Error("login required");
 }
 
 
 // ================= USER =================
-document.getElementById("username").innerText =
-localStorage.getItem("user_name") || "ผู้ใช้";
+setUserNameDisplay();
 
 
 // ================= PAGE =================
@@ -248,19 +243,17 @@ async function saveTreatment(){
 
   const payload = {
 
-    citizen_id: citizenId,
-
     treatment_date:
-    document.getElementById("treatmentDate").value,
+    document.querySelector("[data-field='treatment-date']").value,
 
     treatment_text:
-    document.getElementById("treatmentText").value,
+    document.querySelector("[data-field='treatment-text']").value,
 
     doctor_advice:
-    document.getElementById("doctorAdvice").value,
+    document.querySelector("[data-field='doctor-advice']").value,
 
     detail_text:
-    document.getElementById("detailText").value
+    document.querySelector("[data-field='detail-text']").value
 
   };
 
@@ -285,9 +278,9 @@ async function saveTreatment(){
       {
         method:"POST",
 
-        headers:{
+        headers: getAuthHeaders({
           "Content-Type":"application/json"
-        },
+        }),
 
         body:JSON.stringify(payload)
       }
@@ -299,7 +292,7 @@ async function saveTreatment(){
 
     if(!data.success){
 
-      alert(data.message || "บันทึกไม่สำเร็จ");
+      alert(data.error || data.message || "บันทึกไม่สำเร็จ");
 
       return;
 
@@ -310,10 +303,10 @@ async function saveTreatment(){
     closeModal();
 
     // clear
-    document.getElementById("treatmentDate").value = "";
-    document.getElementById("treatmentText").value = "";
-    document.getElementById("doctorAdvice").value = "";
-    document.getElementById("detailText").value = "";
+    document.querySelector("[data-field='treatment-date']").value = "";
+    document.querySelector("[data-field='treatment-text']").value = "";
+    document.querySelector("[data-field='doctor-advice']").value = "";
+    document.querySelector("[data-field='detail-text']").value = "";
 
     // reload
     loadTreatments();
@@ -335,7 +328,10 @@ async function loadTreatments(){
   try{
 
     const res = await fetch(
-      `http://127.0.0.1:8000/api/treatments/${citizenId}`
+      "http://127.0.0.1:8000/api/treatments",
+      {
+        headers: getAuthHeaders(),
+      }
     );
 
     const data = await res.json();
@@ -390,6 +386,7 @@ async function loadTreatments(){
       document.createElement("div");
 
       card.className = "treatment-card";
+      card.dataset.treatmentId = item.id;
 
       card.innerHTML = `
 
@@ -405,15 +402,15 @@ async function loadTreatments(){
           ${item.treatment_text || "-"}
         </div>
 
-        <div class="treatment-more">
+        <button type="button" class="treatment-more" data-action="open-detail">
           เพิ่มเติม...
-        </div>
+        </button>
 
       `;
 
 
       // DETAIL
-      card.querySelector(".treatment-more")
+      card.querySelector('[data-action="open-detail"]')
       .addEventListener("click", () => {
 
         openDetail(item);

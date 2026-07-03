@@ -22,6 +22,10 @@
   border-radius: 50%;
 }
 
+.header__username {
+  font-size: 14px;
+}
+
 /* IMAGE */
 .preview {
   width: 100%;
@@ -80,11 +84,11 @@
 }
 
 /* LOADING */
-#status {
+[data-result-status] {
   font-weight: bold;
 }
 
-#dots::after {
+[data-loading-dots]::after {
   content: "";
   animation: dots 1.5s infinite;
 }

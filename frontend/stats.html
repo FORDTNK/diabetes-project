@@ -29,7 +29,7 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
       <h1>DFU Care+</h1>
 
       <div class="header-right">
-        <div class="user" id="username"></div>
+        <span class="header__username" data-user-name></span>
         <div class="profile"></div>
       </div>
 
@@ -76,16 +76,15 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
 
 </div>
 
+<script src="js/session.js"></script>
+
 <script>
 
-const citizenId = localStorage.getItem("citizen_id");
-
-if (!citizenId || citizenId === "undefined") {
-  window.location.href = "login.html";
+if (!requireLogin()) {
+  throw new Error("login required");
 }
 
-document.getElementById("username").innerText =
-  localStorage.getItem("user_name") || "ผู้ใช้";
+setUserNameDisplay();
 
 function goPage(page) {
   window.location.href = page + ".html";
@@ -140,7 +139,7 @@ function renderCharts(groups) {
       <div class="chart-position">${group.label}</div>
       <div class="chart-count">${sortedItems.length} ครั้ง</div>
       <div class="chart-wrapper">
-        <canvas id="chart-${index}"></canvas>
+        <canvas class="stats-chart" data-chart-canvas></canvas>
       </div>
     `;
 
@@ -149,7 +148,9 @@ function renderCharts(groups) {
     const labels = sortedItems.map(item => formatThaiDate(item.created_at));
     const grades = sortedItems.map(item => Number(item.class_id) || 0);
 
-    new Chart(document.getElementById(`chart-${index}`), {
+    const canvas = card.querySelector("[data-chart-canvas]");
+
+    new Chart(canvas, {
       type: "line",
       data: {
         labels,
@@ -197,7 +198,9 @@ function renderCharts(groups) {
   });
 }
 
-fetch(`http://127.0.0.1:8000/api/history/${citizenId}`)
+fetch("http://127.0.0.1:8000/api/history", {
+  headers: getAuthHeaders(),
+})
   .then(res => res.json())
   .then(data => {
     const container = document.getElementById("chartList");

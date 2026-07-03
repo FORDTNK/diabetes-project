@@ -59,7 +59,7 @@ body {
   gap: 10px;
 }
 
-.user {
+.header__username {
   font-size: 14px;
 }
 

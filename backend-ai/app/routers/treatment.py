@@ -1,24 +1,34 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from app.db.database import engine
+from app.deps.auth import get_current_user_id
 from sqlalchemy import text
+from sqlalchemy.exc import IntegrityError
 
 router = APIRouter()
 
 
 # ================= MODEL =================
 class Treatment(BaseModel):
-
-    citizen_id: str
     treatment_date: str
     treatment_text: str
     doctor_advice: str
     detail_text: str
 
 
+def _fk_error_message(err: Exception) -> str | None:
+    message = str(err.orig) if hasattr(err, "orig") else str(err)
+    if "1452" in message or "foreign key constraint" in message.lower():
+        return "ไม่พบผู้ใช้ในระบบ กรุณาเข้าสู่ระบบใหม่"
+    return None
+
+
 # ================= SAVE =================
 @router.post("/save-treatment")
-def save_treatment(data: Treatment):
+def save_treatment(
+    data: Treatment,
+    user_id: int = Depends(get_current_user_id),
+):
 
     try:
 
@@ -28,7 +38,7 @@ def save_treatment(data: Treatment):
 
                 INSERT INTO treatment_records
                 (
-                    citizen_id,
+                    user_id,
                     treatment_date,
                     treatment_text,
                     doctor_advice,
@@ -37,7 +47,7 @@ def save_treatment(data: Treatment):
 
                 VALUES
                 (
-                    :citizen_id,
+                    :user_id,
                     :treatment_date,
                     :treatment_text,
                     :doctor_advice,
@@ -45,16 +55,25 @@ def save_treatment(data: Treatment):
                 )
 
             """), {
-                "citizen_id": data.citizen_id,
+                "user_id": user_id,
                 "treatment_date": data.treatment_date,
                 "treatment_text": data.treatment_text,
                 "doctor_advice": data.doctor_advice,
-                "detail_text": data.detail_text
+                "detail_text": data.detail_text,
             })
 
         return {
             "success": True,
-            "message": "saved"
+            "message": "saved",
+        }
+
+    except IntegrityError as e:
+
+        print("SAVE ERROR =", e)
+
+        return {
+            "success": False,
+            "error": _fk_error_message(e) or "บันทึกข้อมูลไม่สำเร็จ",
         }
 
     except Exception as e:
@@ -63,13 +82,13 @@ def save_treatment(data: Treatment):
 
         return {
             "success": False,
-            "error": str(e)
+            "error": str(e),
         }
 
 
 # ================= GET ALL =================
-@router.get("/treatments/{citizen_id}")
-def get_treatments(citizen_id: str):
+@router.get("/treatments")
+def get_treatments(user_id: int = Depends(get_current_user_id)):
 
     try:
 
@@ -78,22 +97,23 @@ def get_treatments(citizen_id: str):
             result = conn.execute(text("""
 
                 SELECT
-                    id,
-                    citizen_id,
-                    treatment_date,
-                    treatment_text,
-                    doctor_advice,
-                    detail_text,
-                    created_at
+                    tr.id,
+                    tr.user_id,
+                    tr.treatment_date,
+                    tr.treatment_text,
+                    tr.doctor_advice,
+                    tr.detail_text,
+                    tr.created_at
 
-                FROM treatment_records
+                FROM treatment_records tr
+                INNER JOIN user u ON u.user_id = tr.user_id
 
-                WHERE citizen_id = :citizen_id
+                WHERE tr.user_id = :user_id
 
-                ORDER BY created_at DESC
+                ORDER BY tr.created_at DESC
 
             """), {
-                "citizen_id": citizen_id
+                "user_id": user_id,
             })
 
             rows = result.mappings().all()
@@ -106,7 +126,7 @@ def get_treatments(citizen_id: str):
 
         return {
             "success": False,
-            "error": str(e)
+            "error": str(e),
         }
 
 
@@ -121,22 +141,23 @@ def treatment_detail(id: int):
             result = conn.execute(text("""
 
                 SELECT
-                    id,
-                    citizen_id,
-                    treatment_date,
-                    treatment_text,
-                    doctor_advice,
-                    detail_text,
-                    created_at
+                    tr.id,
+                    tr.user_id,
+                    tr.treatment_date,
+                    tr.treatment_text,
+                    tr.doctor_advice,
+                    tr.detail_text,
+                    tr.created_at
 
-                FROM treatment_records
+                FROM treatment_records tr
+                INNER JOIN user u ON u.user_id = tr.user_id
 
-                WHERE id = :id
+                WHERE tr.id = :id
 
                 LIMIT 1
 
             """), {
-                "id": id
+                "id": id,
             })
 
             row = result.mappings().first()
@@ -145,7 +166,7 @@ def treatment_detail(id: int):
 
             return {
                 "success": False,
-                "message": "not found"
+                "message": "not found",
             }
 
         return row
@@ -156,7 +177,7 @@ def treatment_detail(id: int):
 
         return {
             "success": False,
-            "error": str(e)
+            "error": str(e),
         }
 
 
@@ -168,7 +189,6 @@ def update_treatment(id: int, data: Treatment):
 
         with engine.begin() as conn:
 
-            # 🔥 check data
             check = conn.execute(text("""
 
                 SELECT id
@@ -177,17 +197,16 @@ def update_treatment(id: int, data: Treatment):
                 WHERE id = :id
 
             """), {
-                "id": id
+                "id": id,
             }).fetchone()
 
             if not check:
 
                 return {
                     "success": False,
-                    "message": "not found"
+                    "message": "not found",
                 }
 
-            # 🔥 update
             conn.execute(text("""
 
                 UPDATE treatment_records
@@ -205,12 +224,12 @@ def update_treatment(id: int, data: Treatment):
                 "treatment_date": data.treatment_date,
                 "treatment_text": data.treatment_text,
                 "doctor_advice": data.doctor_advice,
-                "detail_text": data.detail_text
+                "detail_text": data.detail_text,
             })
 
         return {
             "success": True,
-            "message": "updated"
+            "message": "updated",
         }
 
     except Exception as e:
@@ -219,7 +238,7 @@ def update_treatment(id: int, data: Treatment):
 
         return {
             "success": False,
-            "error": str(e)
+            "error": str(e),
         }
 
 
@@ -231,7 +250,6 @@ def delete_treatment(id: int):
 
         with engine.begin() as conn:
 
-            # 🔥 check
             check = conn.execute(text("""
 
                 SELECT id
@@ -240,17 +258,16 @@ def delete_treatment(id: int):
                 WHERE id = :id
 
             """), {
-                "id": id
+                "id": id,
             }).fetchone()
 
             if not check:
 
                 return {
                     "success": False,
-                    "message": "not found"
+                    "message": "not found",
                 }
 
-            # 🔥 delete
             conn.execute(text("""
 
                 DELETE FROM treatment_records
@@ -258,12 +275,12 @@ def delete_treatment(id: int):
                 WHERE id = :id
 
             """), {
-                "id": id
+                "id": id,
             })
 
         return {
             "success": True,
-            "message": "deleted"
+            "message": "deleted",
         }
 
     except Exception as e:
@@ -272,5 +289,5 @@ def delete_treatment(id: int):
 
         return {
             "success": False,
-            "error": str(e)
+            "error": str(e),
         }

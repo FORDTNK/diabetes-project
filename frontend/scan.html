@@ -21,22 +21,22 @@
       <h1>DFU Care+</h1>
 
       <div class="header-right">
-        <div class="user" id="username"></div>
+        <span class="header__username" data-user-name></span>
         <div class="profile"></div>
       </div>
     </div>
 
-    <div class="scan-image" id="scanImage">
-      <img id="scanPreview" src="assets/foot.png" alt="ตัวอย่างตำแหน่งถ่ายภาพเท้า">
-      <video id="cameraPreview" autoplay playsinline muted hidden></video>
-      <canvas id="captureCanvas" hidden></canvas>
-      <div class="crosshair" id="crosshair">+</div>
+    <div class="scan-image" data-scan-stage>
+      <img data-scan-preview src="assets/foot.png" alt="ตัวอย่างตำแหน่งถ่ายภาพเท้า">
+      <video data-camera-preview autoplay playsinline muted hidden></video>
+      <canvas data-capture-canvas hidden></canvas>
+      <div class="crosshair" data-crosshair>+</div>
     </div>
 
     <div class="scan-text">
-      <h3 id="scanTitle">ก่อนถ่ายภาพ กรุณา</h3>
+      <h3 data-scan-title>ก่อนถ่ายภาพ กรุณา</h3>
 
-      <p id="scanInstruction">
+      <p data-scan-instruction>
         ล้างเท้าให้สะอาดและเช็ดให้แห้ง ถ่ายในที่แสงสว่างเพียงพอ หลีกเลี่ยงเงาหรือภาพมืดเกินไป
         ถ่ายให้เห็นทั้งบริเวณแผล และให้เครื่องหมาย + อยู่ตรงกลางของแผล
       </p>
@@ -46,21 +46,21 @@
       </p>
     </div>
 
-    <input type="file" id="fileInput" accept="image/*" hidden>
+    <input type="file" data-file-input accept="image/*" hidden>
 
-    <div class="scan-buttons" id="pickButtons">
-      <button class="upload-btn" id="leftActionBtn" type="button" onclick="handleLeftAction()">
-        <i class="fa-solid fa-upload" id="leftActionIcon"></i>
-        <span id="leftActionText">อัปโหลดรูปภาพ</span>
+    <div class="scan-buttons" data-pick-buttons>
+      <button class="upload-btn" type="button" onclick="handleLeftAction()">
+        <i class="fa-solid fa-upload" data-left-action-icon></i>
+        <span data-left-action-text>อัปโหลดรูปภาพ</span>
       </button>
 
-      <button class="camera-btn" id="rightActionBtn" type="button" onclick="handleRightAction()">
-        <i class="fa-solid fa-camera" id="rightActionIcon"></i>
-        <span id="rightActionText">ถ่ายรูป</span>
+      <button class="camera-btn" type="button" onclick="handleRightAction()">
+        <i class="fa-solid fa-camera"></i>
+        <span data-right-action-text>ถ่ายรูป</span>
       </button>
     </div>
 
-    <div class="confirm-panel" id="confirmPanel" hidden>
+    <div class="confirm-panel" data-confirm-panel hidden>
       <p class="confirm-text">ตรวจสอบรูปภาพให้ชัดเจนก่อนยืนยันเพื่อเริ่มวิเคราะห์ความรุนแรง</p>
 
       <div class="confirm-buttons">
@@ -104,36 +104,34 @@
 
 </div>
 
+<script src="js/session.js"></script>
+
 <script>
 
-const usernameEl = document.getElementById("username");
-const scanImage = document.getElementById("scanImage");
-const scanPreview = document.getElementById("scanPreview");
-const cameraPreview = document.getElementById("cameraPreview");
-const captureCanvas = document.getElementById("captureCanvas");
-const crosshair = document.getElementById("crosshair");
-const scanTitle = document.getElementById("scanTitle");
-const scanInstruction = document.getElementById("scanInstruction");
-const pickButtons = document.getElementById("pickButtons");
-const confirmPanel = document.getElementById("confirmPanel");
-const fileInput = document.getElementById("fileInput");
-const leftActionIcon = document.getElementById("leftActionIcon");
-const leftActionText = document.getElementById("leftActionText");
-const rightActionText = document.getElementById("rightActionText");
+if (!requireLogin()) {
+  throw new Error("login required");
+}
+
+setUserNameDisplay();
+
+const scanImage = document.querySelector("[data-scan-stage]");
+const scanPreview = document.querySelector("[data-scan-preview]");
+const cameraPreview = document.querySelector("[data-camera-preview]");
+const captureCanvas = document.querySelector("[data-capture-canvas]");
+const crosshair = document.querySelector("[data-crosshair]");
+const scanTitle = document.querySelector("[data-scan-title]");
+const scanInstruction = document.querySelector("[data-scan-instruction]");
+const pickButtons = document.querySelector("[data-pick-buttons]");
+const confirmPanel = document.querySelector("[data-confirm-panel]");
+const fileInput = document.querySelector("[data-file-input]");
+const leftActionIcon = document.querySelector("[data-left-action-icon]");
+const leftActionText = document.querySelector("[data-left-action-text]");
+const rightActionText = document.querySelector("[data-right-action-text]");
 
 let selectedImage = "";
 let cameraStream = null;
 let lastInputType = "camera";
 let isCameraMode = false;
-
-const citizenId = localStorage.getItem("citizen_id");
-
-if (!citizenId || citizenId === "undefined") {
-  alert("กรุณาเข้าสู่ระบบก่อนใช้งาน");
-  window.location.href = "login.html";
-}
-
-usernameEl.innerText = localStorage.getItem("user_name") || "ผู้ใช้";
 
 document.querySelectorAll(".nav-btn, .scan-btn").forEach(btn => {
   btn.addEventListener("click", () => {

@@ -38,7 +38,7 @@ document.getElementById("loginForm").addEventListener("submit", async function (
       return;
     }
 
-    localStorage.setItem("citizen_id", citizen_id);
+    localStorage.setItem("user_id", String(data.user_id));
     localStorage.setItem("user_name", data.name);
 
     if (data.token) {
@@ -281,15 +281,15 @@ function togglePassword() {
 }
 
 window.addEventListener("load", () => {
-  const citizenId = localStorage.getItem("citizen_id");
+  const userId = localStorage.getItem("user_id");
 
-  if (citizenId) {
+  if (userId) {
     window.location.replace("home.html");
   }
 });
 
 function logout() {
-  localStorage.removeItem("citizen_id");
+  localStorage.removeItem("user_id");
   localStorage.removeItem("user_name");
   localStorage.removeItem("token");
   localStorage.removeItem("image");

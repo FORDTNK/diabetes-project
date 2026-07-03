@@ -29,8 +29,7 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
 
   <div class="header-right">
 
-    <div class="user" id="username">
-    </div>
+    <span class="header__username" data-user-name></span>
 
     <div class="profile"></div>
 
@@ -55,7 +54,7 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
       </div>
 
       <div class="detail-box"
-        id="detailDate">
+        data-field="date">
       </div>
 
       <!-- TREATMENT -->
@@ -64,7 +63,7 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
       </div>
 
       <div class="detail-textbox"
-        id="detailTreatment">
+        data-field="treatment">
       </div>
 
       <!-- ADVICE -->
@@ -73,7 +72,7 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
       </div>
 
       <div class="detail-textbox"
-        id="detailAdvice">
+        data-field="advice">
       </div>
 
       <!-- DETAIL -->
@@ -82,7 +81,7 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
       </div>
 
       <div class="detail-textbox"
-        id="detailDetail">
+        data-field="detail">
       </div>
 
     </div>
@@ -117,11 +116,12 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
 
 </div>
 
+<script src="js/session.js"></script>
+
 <script>
 
 // ================= USER =================
-document.getElementById("username").innerText =
-localStorage.getItem("user_name") || "ผู้ใช้";
+setUserNameDisplay();
 
 
 // ================= DATA =================
@@ -132,16 +132,16 @@ JSON.parse(
 
 
 // ================= SHOW =================
-document.getElementById("detailDate").innerText =
+document.querySelector('[data-field="date"]').innerText =
 data.treatment_date || "-";
 
-document.getElementById("detailTreatment").innerText =
+document.querySelector('[data-field="treatment"]').innerText =
 data.treatment_text || "-";
 
-document.getElementById("detailAdvice").innerText =
+document.querySelector('[data-field="advice"]').innerText =
 data.doctor_advice || "-";
 
-document.getElementById("detailDetail").innerText =
+document.querySelector('[data-field="detail"]').innerText =
 data.detail_text || "-";
 
 
@@ -166,7 +166,8 @@ async function deleteTreatment(){
     const res = await fetch(
       `http://127.0.0.1:8000/api/delete-treatment/${data.id}`,
       {
-        method:"DELETE"
+        method:"DELETE",
+        headers: getAuthHeaders(),
       }
     );
 

@@ -28,9 +28,7 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
 
       <div class="header-right">
 
-        <div class="username" id="username">
-          ผู้ใช้
-        </div>
+        <span class="header__username" data-user-name>ผู้ใช้</span>
 
         <div class="profile"></div>
 
@@ -54,10 +52,10 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
       <!-- DATE + POSITION -->
       <div class="detail-top">
 
-        <div id="detailDate" class="detail-date">
+        <div class="detail-date" data-field="date">
         </div>
 
-        <div id="detailPosition" class="detail-position">
+        <div class="detail-position" data-field="position">
         </div>
 
       </div>
@@ -66,8 +64,9 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
       <div class="image-wrapper">
 
         <img
-          id="detailImage"
           class="detail-image"
+          data-field="image"
+          alt="ภาพแผล"
         >
 
       </div>
@@ -77,7 +76,7 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
         ผลคาดการณ์ว่า!
       </div>
 
-      <div class="result-grade" id="detailGrade">
+      <div class="result-grade" data-field="grade">
       </div>
 
       <!-- ADVICE -->
@@ -85,11 +84,11 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
         คำแนะนำในการดูแลเบื้องต้น
       </div>
 
-      <div class="advice-box" id="detailAdvice">
+      <div class="advice-box" data-field="advice">
       </div>
 
       <!-- BUTTONS -->
-      <div class="detail-buttons">
+      <div class="detail-buttons" data-detail-actions>
 
         <button class="delete-btn" onclick="deleteHistory()">
           <i class="fa-regular fa-trash-can"></i>
@@ -110,19 +109,18 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
 </div>
 
 
+<script src="js/session.js"></script>
+
 <script>
 
 // ================= LOGIN CHECK =================
-const citizenId = localStorage.getItem("citizen_id");
-
-if (!citizenId) {
-  window.location.href = "login.html";
+if (!requireLogin()) {
+  throw new Error("login required");
 }
 
 
 // ================= USER =================
-document.getElementById("username").innerText =
-  localStorage.getItem("user_name") || "ผู้ใช้";
+setUserNameDisplay();
 
 
 // ================= GET DATA =================
@@ -155,22 +153,22 @@ const thaiDate = date.toLocaleDateString("th-TH", {
 
 
 // ================= SET DATA =================
-document.getElementById("detailDate").innerText =
+document.querySelector('[data-field="date"]').innerText =
   `วันที่ ${thaiDate}`;
 
-document.getElementById("detailPosition").innerText =
+document.querySelector('[data-field="position"]').innerText =
   historyData.wound_position || "-";
 
-document.getElementById("detailGrade").innerText =
+document.querySelector('[data-field="grade"]').innerText =
   `Wagner Graed : Class ${historyData.class_id}`;
 
-document.getElementById("detailAdvice").innerText =
+document.querySelector('[data-field="advice"]').innerText =
   historyData.advice || "-";
 
 
 // ================= IMAGE =================
 const imageEl =
-  document.getElementById("detailImage");
+  document.querySelector('[data-field="image"]');
 
 if (historyData.image_name) {
 
@@ -202,19 +200,13 @@ function goBack(){
 // ================= PRINT PDF =================
 function printPDF(){
 
-  // 🔥 ซ่อนปุ่มก่อนพิมพ์
-  document.querySelector(".detail-buttons")
-    .style.display = "none";
+  const actions = document.querySelector("[data-detail-actions]");
+  actions.style.display = "none";
 
-  // 🔥 เปิด print
   window.print();
 
-  // 🔥 แสดงปุ่มกลับ
   setTimeout(() => {
-
-    document.querySelector(".detail-buttons")
-      .style.display = "flex";
-
+    actions.style.display = "flex";
   }, 500);
 
 }
@@ -235,7 +227,8 @@ async function deleteHistory(){
       `http://127.0.0.1:8000/api/delete-history/${historyData.id}`,
 
       {
-        method: "DELETE"
+        method: "DELETE",
+        headers: getAuthHeaders(),
       }
 
     );
@@ -252,10 +245,8 @@ async function deleteHistory(){
 
     alert("✅ ลบสำเร็จ");
 
-    // 🔥 ล้างข้อมูล
     localStorage.removeItem("selected_history");
 
-    // 🔥 กลับหน้าประวัติ
     window.location.href = "history.html";
 
   }
