@@ -50,12 +50,75 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
 
       </div>
 
+      <!-- SEARCH -->
+      <div class="history-search">
+        <div class="search-input-wrap">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input
+            type="text"
+            id="searchInput"
+            placeholder="ค้นหาวันที่หรือตำแหน่งแผล..."
+          >
+        </div>
+      </div>
+
       <!-- LIST -->
       <div id="historyList"></div>
 
     </div>
 
+    <!-- PRINT BUTTON (outside white frame) -->
+    <div class="history-print-bar">
+      <button type="button" class="history-print-btn" onclick="openPrintModal()">
+        <i class="fa-solid fa-print"></i>
+        พิมพ์
+      </button>
+    </div>
+
+    <!-- PRINT POPUP -->
+    <div class="history-modal" id="printModal" hidden>
+
+      <div class="history-modal-content">
+
+        <button type="button" class="history-modal-close" onclick="closePrintModal()">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+
+        <!-- STEP 1: POSITION -->
+        <div id="printStepPosition">
+          <h3>เลือกตำแหน่งแผล</h3>
+          <div class="position-list" id="positionList"></div>
+        </div>
+
+        <!-- STEP 2: DATE -->
+        <div id="printStepDate" hidden>
+          <h3>เลือกช่วงวันที่</h3>
+          <p class="print-selected-position" id="printSelectedPosition"></p>
+
+          <label class="print-date-label">จากวันที่</label>
+          <select class="print-date-select" id="dateFrom"></select>
+
+          <label class="print-date-label">ถึงวันที่</label>
+          <select class="print-date-select" id="dateTo"></select>
+
+          <div class="history-modal-buttons">
+            <button type="button" class="modal-back-btn" onclick="backToPositionStep()">
+              ย้อนกลับ
+            </button>
+            <button type="button" class="modal-confirm-btn" onclick="confirmPrint()">
+              พิมพ์
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
   </div>
+
+  <!-- PRINT AREA -->
+  <div id="printArea" class="print-area"></div>
 
   <!-- BOTTOM NAV -->
   <div class="bottom-nav">
@@ -112,18 +175,410 @@ function goPage(page){
 }
 
 
-// ================= OPEN DETAIL =================
-function openDetail(item){
+// ================= DATA =================
+let allHistory = [];
+let selectedPrintPosition = null;
 
-  // 🔥 save data
-  localStorage.setItem(
-    "selected_history",
-    JSON.stringify(item)
+
+// ================= FORMAT DATE =================
+function formatThaiDate(dateStr) {
+
+  const date = new Date(dateStr);
+
+  return date.toLocaleDateString("th-TH", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+
+}
+
+
+function toDateKey(dateStr) {
+
+  const date = new Date(dateStr);
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+
+  return `${y}-${m}-${d}`;
+
+}
+
+
+// ================= RENDER LIST =================
+function renderHistoryList(data) {
+
+  const container = document.getElementById("historyList");
+
+  if (!data.length) {
+
+    container.innerHTML = `
+      <div class="no-data">
+        ${allHistory.length ? "ไม่พบข้อมูลที่ค้นหา" : "ยังไม่มีประวัติการวิเคราะห์"}
+      </div>
+    `;
+
+    return;
+
+  }
+
+  container.innerHTML = "";
+
+  data.forEach(item => {
+
+    const thaiDate = formatThaiDate(item.created_at);
+
+    const card = document.createElement("div");
+
+    card.className = "history-card";
+    card.dataset.historyId = item.id;
+
+    card.innerHTML = `
+
+      <div class="history-top">
+
+        <div class="history-date">
+          วันที่ ${thaiDate}
+        </div>
+
+        <div class="history-position">
+          ${item.wound_position || "-"}
+        </div>
+
+      </div>
+
+      <div class="history-grade-title">
+        ผลคาดการณ์ว่า!
+      </div>
+
+      <div class="history-grade">
+        Wagner Graed : Class ${item.class_id}
+      </div>
+
+      <button type="button" class="history-more" data-action="open-detail">
+        เพิ่มเติม...
+      </button>
+
+    `;
+
+    card.querySelector('[data-action="open-detail"]')
+      .addEventListener("click", () => {
+
+        localStorage.setItem(
+          "selected_history",
+          JSON.stringify(item)
+        );
+
+        window.location.href = "history-detail.html";
+
+      });
+
+    container.appendChild(card);
+
+  });
+
+}
+
+
+// ================= SEARCH =================
+function applySearch() {
+
+  const query = document
+    .getElementById("searchInput")
+    .value.trim()
+    .toLowerCase();
+
+  if (!query) {
+    renderHistoryList(allHistory);
+    return;
+  }
+
+  const filtered = allHistory.filter(item => {
+
+    const thaiDate = formatThaiDate(item.created_at).toLowerCase();
+    const position = (item.wound_position || "").toLowerCase();
+
+    return thaiDate.includes(query) || position.includes(query);
+
+  });
+
+  renderHistoryList(filtered);
+
+}
+
+
+document.getElementById("searchInput")
+  .addEventListener("input", applySearch);
+
+
+// ================= PRINT MODAL =================
+function openPrintModal() {
+
+  if (!allHistory.length) {
+    alert("ยังไม่มีประวัติการวิเคราะห์");
+    return;
+  }
+
+  selectedPrintPosition = null;
+
+  document.getElementById("printStepPosition").hidden = false;
+  document.getElementById("printStepDate").hidden = true;
+
+  renderPositionList();
+
+  const modal = document.getElementById("printModal");
+  modal.hidden = false;
+  modal.style.display = "flex";
+
+}
+
+
+function closePrintModal() {
+
+  const modal = document.getElementById("printModal");
+  modal.hidden = true;
+  modal.style.display = "none";
+
+}
+
+
+function renderPositionList() {
+
+  const positions = [...new Set(
+    allHistory
+      .map(item => item.wound_position)
+      .filter(Boolean)
+  )];
+
+  const list = document.getElementById("positionList");
+
+  list.innerHTML = `
+    <button type="button" class="position-option" data-position="__ALL__">
+      ทุกตำแหน่ง
+    </button>
+  `;
+
+  positions.forEach(position => {
+
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "position-option";
+    btn.dataset.position = position;
+    btn.textContent = position;
+    list.appendChild(btn);
+
+  });
+
+  list.querySelectorAll(".position-option").forEach(btn => {
+
+    btn.addEventListener("click", () => {
+
+      selectedPrintPosition = btn.dataset.position;
+      showDateStep();
+
+    });
+
+  });
+
+}
+
+
+function getRecordsForPosition(position) {
+
+  if (position === "__ALL__") {
+    return allHistory;
+  }
+
+  return allHistory.filter(
+    item => item.wound_position === position
   );
 
-  // 🔥 go page
-  window.location.href =
-    "history-detail.html";
+}
+
+
+function showDateStep() {
+
+  const records = getRecordsForPosition(selectedPrintPosition);
+
+  const dateKeys = [...new Set(
+    records.map(item => toDateKey(item.created_at))
+  )].sort();
+
+  const dateFrom = document.getElementById("dateFrom");
+  const dateTo = document.getElementById("dateTo");
+
+  dateFrom.innerHTML = "";
+  dateTo.innerHTML = "";
+
+  dateKeys.forEach(key => {
+
+    const label = formatThaiDate(key);
+
+    dateFrom.innerHTML += `<option value="${key}">${label}</option>`;
+    dateTo.innerHTML += `<option value="${key}">${label}</option>`;
+
+  });
+
+  dateTo.selectedIndex = dateKeys.length - 1;
+
+  document.getElementById("printSelectedPosition").textContent =
+    selectedPrintPosition === "__ALL__"
+      ? "ตำแหน่ง: ทุกตำแหน่ง"
+      : `ตำแหน่ง: ${selectedPrintPosition}`;
+
+  document.getElementById("printStepPosition").hidden = true;
+  document.getElementById("printStepDate").hidden = false;
+
+}
+
+
+function backToPositionStep() {
+
+  document.getElementById("printStepPosition").hidden = false;
+  document.getElementById("printStepDate").hidden = true;
+
+}
+
+
+function confirmPrint() {
+
+  const fromKey = document.getElementById("dateFrom").value;
+  const toKey = document.getElementById("dateTo").value;
+
+  if (!fromKey || !toKey) {
+    alert("กรุณาเลือกวันที่");
+    return;
+  }
+
+  if (fromKey > toKey) {
+    alert("วันที่เริ่มต้นต้องไม่เกินวันที่สิ้นสุด");
+    return;
+  }
+
+  const records = getRecordsForPosition(selectedPrintPosition)
+    .filter(item => {
+      const key = toDateKey(item.created_at);
+      return key >= fromKey && key <= toKey;
+    })
+    .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+
+  if (!records.length) {
+    alert("ไม่พบข้อมูลในช่วงวันที่ที่เลือก");
+    return;
+  }
+
+  buildPrintArea(records);
+
+  closePrintModal();
+
+  const printBar = document.querySelector(".history-print-bar");
+  printBar.style.display = "none";
+
+  await waitForPrintImages();
+
+  window.print();
+
+  setTimeout(() => {
+    printBar.style.display = "flex";
+    document.getElementById("printArea").classList.remove("print-area--visible");
+  }, 500);
+
+}
+
+
+function waitForPrintImages() {
+
+  const images = document.querySelectorAll("#printArea img");
+
+  return Promise.all([...images].map(img => {
+
+    if (img.complete) {
+      return Promise.resolve();
+    }
+
+    return new Promise(resolve => {
+      img.onload = resolve;
+      img.onerror = resolve;
+    });
+
+  }));
+
+}
+
+
+function buildPrintArea(records) {
+
+  const area = document.getElementById("printArea");
+  const userName = getUserName();
+
+  let html = "";
+
+  records.forEach((item, index) => {
+
+    const thaiDate = formatThaiDate(item.created_at);
+    const imageSrc = item.image_name
+      ? `http://127.0.0.1:8000/uploads/${item.image_name}`
+      : "https://via.placeholder.com/220x220?text=No+Image";
+
+    const isLast = index === records.length - 1;
+
+    html += `
+      <div class="print-page${isLast ? " print-page--last" : ""}">
+
+        <div class="detail-header">
+          <h1>DFU Care+</h1>
+          <div class="header-right">
+            <span class="header__username">${userName}</span>
+            <div class="profile"></div>
+          </div>
+        </div>
+
+        <div class="detail-container">
+
+          <div class="detail-title">
+            ประวัติการวิเคราะห์
+          </div>
+
+          <div class="detail-top">
+            <div class="detail-date">วันที่ ${thaiDate}</div>
+            <div class="detail-position">${item.wound_position || "-"}</div>
+          </div>
+
+          <div class="image-wrapper">
+            <img
+              class="detail-image"
+              src="${imageSrc}"
+              alt="ภาพแผล"
+            >
+          </div>
+
+          <div class="result-title">
+            ผลคาดการณ์ว่า!
+          </div>
+
+          <div class="result-grade">
+            Wagner Graed : Class ${item.class_id}
+          </div>
+
+          <div class="advice-title">
+            คำแนะนำในการดูแลเบื้องต้น
+          </div>
+
+          <div class="advice-box">
+            ${item.advice || "-"}
+          </div>
+
+        </div>
+
+      </div>
+    `;
+
+  });
+
+  area.innerHTML = html;
+  area.classList.add("print-area--visible");
+
 }
 
 
@@ -136,87 +591,11 @@ fetch("http://127.0.0.1:8000/api/history", {
 
 .then(data => {
 
-  const container = document.getElementById("historyList");
-
-  // 🔥 เรียงล่าสุดก่อน
-  data.sort((a, b) =>
-    new Date(b.created_at) - new Date(a.created_at)
+  allHistory = data.sort(
+    (a, b) => new Date(b.created_at) - new Date(a.created_at)
   );
 
-  // ================= NO DATA =================
-  if (!data.length) {
-
-    container.innerHTML = `
-      <div class="no-data">
-        ยังไม่มีประวัติการวิเคราะห์
-      </div>
-    `;
-
-    return;
-  }
-
-// ================= LOOP CARD =================
-data.forEach(item => {
-
-  const date = new Date(item.created_at);
-
-  const thaiDate = date.toLocaleDateString("th-TH", {
-    year:'numeric',
-    month:'long',
-    day:'numeric'
-  });
-
-  const card = document.createElement("div");
-
-  card.className = "history-card";
-  card.dataset.historyId = item.id;
-
-  card.innerHTML = `
-  
-    <div class="history-top">
-
-      <div class="history-date">
-        วันที่ ${thaiDate}
-      </div>
-
-      <div class="history-position">
-        ${item.wound_position || "-"}
-      </div>
-
-    </div>
-
-    <div class="history-grade-title">
-      ผลคาดการณ์ว่า!
-    </div>
-
-    <div class="history-grade">
-      Wagner Graed : Class ${item.class_id}
-    </div>
-
-    <!-- BUTTON -->
-    <button type="button" class="history-more" data-action="open-detail">
-      เพิ่มเติม...
-    </button>
-
-  `;
-
-  // 🔥 ส่งข้อมูล item ของ card นี้
-  card.querySelector('[data-action="open-detail"]')
-    .addEventListener("click", () => {
-
-      localStorage.setItem(
-        "selected_history",
-        JSON.stringify(item)
-      );
-
-      window.location.href =
-        "history-detail.html";
-
-    });
-
-  container.appendChild(card);
-
-});
+  renderHistoryList(allHistory);
 
 })
 
