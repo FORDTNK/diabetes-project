@@ -9,7 +9,7 @@
 
 <link rel="stylesheet" href="css/style.css">
 <link rel="stylesheet" href="css/home.css">
-<link rel="stylesheet" href="css/stats.css">
+<link rel="stylesheet" href="css/stats.css?v=4">
 
 <link rel="stylesheet"
 href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -86,6 +86,8 @@ if (!requireLogin()) {
 
 setUserNameDisplay();
 
+let statsGroups = [];
+
 function goPage(page) {
   window.location.href = page + ".html";
 }
@@ -123,79 +125,120 @@ function groupByPosition(records) {
   return Object.values(groups);
 }
 
+function createSeverityChart(canvas, labels, grades, config = {}) {
+  return new Chart(canvas, {
+    type: "line",
+    data: {
+      labels,
+      datasets: [{
+        label: "Wagner Class",
+        data: grades,
+        borderColor: "#7b2031",
+        backgroundColor: "rgba(123, 32, 49, 0.12)",
+        pointBackgroundColor: "#f25f6c",
+        pointBorderColor: "#7b2031",
+        pointRadius: config.pointRadius || 5,
+        tension: 0.25,
+        fill: true
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: {
+          min: 0,
+          max: 5,
+          ticks: {
+            stepSize: 1
+          },
+          title: {
+            display: true,
+            text: "ระดับ Wagner"
+          }
+        },
+        x: {
+          ticks: {
+            autoSkip: config.autoSkip !== false
+          },
+          title: {
+            display: true,
+            text: "วันที่วิเคราะห์"
+          }
+        }
+      },
+      plugins: {
+        legend: {
+          display: false
+        }
+      }
+    }
+  });
+}
+
 function renderCharts(groups) {
   const container = document.getElementById("chartList");
   container.innerHTML = "";
 
   groups.forEach((group, index) => {
-    const sortedItems = group.items.sort(
+    const sortedItems = [...group.items].sort(
       (a, b) => new Date(a.created_at) - new Date(b.created_at)
     );
+    const previewItems = sortedItems.slice(-6);
+    const countText = sortedItems.length > 6
+      ? `${sortedItems.length} ครั้ง (แสดง 6 วันล่าสุด)`
+      : `${sortedItems.length} ครั้ง`;
 
     const card = document.createElement("div");
     card.className = "chart-card";
 
     card.innerHTML = `
       <div class="chart-position">${group.label}</div>
-      <div class="chart-count">${sortedItems.length} ครั้ง</div>
+      <div class="chart-count">${countText}</div>
       <div class="chart-wrapper">
         <canvas class="stats-chart" data-chart-canvas></canvas>
+      </div>
+      <div class="chart-action-row">
+          <button
+            type="button"
+            class="chart-more-btn"
+            onclick="openChartDetail(${index})">
+            เพิ่มเติม
+          </button>
       </div>
     `;
 
     container.appendChild(card);
 
-    const labels = sortedItems.map(item => formatThaiDate(item.created_at));
-    const grades = sortedItems.map(item => Number(item.class_id) || 0);
+    const labels = previewItems.map(item => formatThaiDate(item.created_at));
+    const grades = previewItems.map(item => Number(item.class_id) || 0);
 
     const canvas = card.querySelector("[data-chart-canvas]");
 
-    new Chart(canvas, {
-      type: "line",
-      data: {
-        labels,
-        datasets: [{
-          label: "Wagner Class",
-          data: grades,
-          borderColor: "#7b2031",
-          backgroundColor: "rgba(123, 32, 49, 0.12)",
-          pointBackgroundColor: "#f25f6c",
-          pointBorderColor: "#7b2031",
-          pointRadius: 5,
-          tension: 0.25,
-          fill: true
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-          y: {
-            min: 0,
-            max: 5,
-            ticks: {
-              stepSize: 1
-            },
-            title: {
-              display: true,
-              text: "ระดับ Wagner"
-            }
-          },
-          x: {
-            title: {
-              display: true,
-              text: "วันที่วิเคราะห์"
-            }
-          }
-        },
-        plugins: {
-          legend: {
-            display: false
-          }
-        }
-      }
-    });
+    createSeverityChart(canvas, labels, grades);
   });
+}
+
+function openChartDetail(index) {
+  const group = statsGroups[index];
+
+  if (!group) {
+    return;
+  }
+
+  const detailData = {
+    label: group.label,
+    items: [...group.items].sort(
+      (a, b) => new Date(a.created_at) - new Date(b.created_at)
+    )
+  };
+
+  localStorage.setItem(
+    "selected_stats_group",
+    JSON.stringify(detailData)
+  );
+
+  window.location.href = "stats-detail.html";
 }
 
 fetch("http://127.0.0.1:8000/api/history", {
@@ -218,7 +261,8 @@ fetch("http://127.0.0.1:8000/api/history", {
 
     groups.sort((a, b) => a.label.localeCompare(b.label, "th"));
 
-    renderCharts(groups);
+    statsGroups = groups;
+    renderCharts(statsGroups);
   })
   .catch(err => {
     console.error(err);

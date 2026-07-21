@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Stats Detail</title>
+
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/home.css">
+<link rel="stylesheet" href="css/stats.css?v=4">
+
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+</head>
+
+<body>
+
+<div class="iphone-frame">
+
+  <div class="screen">
+
+    <div class="header">
+
+      <h1>DFU Care+</h1>
+
+      <div class="header-right">
+        <span class="header__username" data-user-name></span>
+        <div class="profile"></div>
+      </div>
+
+    </div>
+
+    <div class="stats-container stats-detail-container">
+
+      <button
+        type="button"
+        class="stats-back-btn"
+        onclick="goBack()"
+        aria-label="ย้อนกลับ">
+        <i class="fa-solid fa-arrow-left"></i>
+      </button>
+
+      <div class="stats-header">
+        <div class="stats-title" data-detail-title></div>
+        <div class="stats-subtitle" data-detail-count></div>
+      </div>
+
+      <div class="large-chart-scroll" id="largeChartScroll">
+        <div class="large-chart-stage" id="largeChartStage">
+          <canvas id="largeChartCanvas"></canvas>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<script src="js/session.js"></script>
+
+<script>
+
+if (!requireLogin()) {
+  throw new Error("login required");
+}
+
+setUserNameDisplay();
+
+function goBack() {
+  window.location.href = "stats.html";
+}
+
+function formatThaiDate(dateString) {
+  const date = new Date(dateString);
+  return date.toLocaleDateString("th-TH", {
+    day: "numeric",
+    month: "short",
+    year: "2-digit"
+  });
+}
+
+function createSeverityChart(canvas, labels, grades) {
+  return new Chart(canvas, {
+    type: "line",
+    data: {
+      labels,
+      datasets: [{
+        label: "Wagner Class",
+        data: grades,
+        borderColor: "#7b2031",
+        backgroundColor: "rgba(123, 32, 49, 0.12)",
+        pointBackgroundColor: "#f25f6c",
+        pointBorderColor: "#7b2031",
+        pointRadius: 6,
+        tension: 0.25,
+        fill: true
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: {
+          min: 0,
+          max: 5,
+          ticks: {
+            stepSize: 1
+          },
+          title: {
+            display: true,
+            text: "ระดับ Wagner"
+          }
+        },
+        x: {
+          ticks: {
+            autoSkip: false
+          },
+          title: {
+            display: true,
+            text: "วันที่วิเคราะห์"
+          }
+        }
+      },
+      plugins: {
+        legend: {
+          display: false
+        }
+      }
+    }
+  });
+}
+
+const rawData =
+  localStorage.getItem("selected_stats_group");
+
+if (!rawData) {
+  alert("ไม่พบข้อมูลกราฟ");
+  window.location.href = "stats.html";
+}
+
+const detailData = JSON.parse(rawData);
+const items = Array.isArray(detailData.items) ? detailData.items : [];
+
+if (!items.length) {
+  alert("ไม่พบข้อมูลกราฟ");
+  window.location.href = "stats.html";
+}
+
+document.querySelector("[data-detail-title]").textContent =
+  detailData.label || "ไม่ระบุตำแหน่ง";
+
+document.querySelector("[data-detail-count]").textContent =
+  `${items.length} ครั้ง`;
+
+const labels = items.map(item => formatThaiDate(item.created_at));
+const grades = items.map(item => Number(item.class_id) || 0);
+const scroll = document.getElementById("largeChartScroll");
+const stage = document.getElementById("largeChartStage");
+const canvas = document.getElementById("largeChartCanvas");
+const shouldScrollChart =
+  items.length > 6;
+
+scroll.classList.toggle(
+  "large-chart-scroll--active",
+  shouldScrollChart
+);
+
+stage.style.width = shouldScrollChart
+  ? `${items.length * 92}px`
+  : "100%";
+
+createSeverityChart(canvas, labels, grades);
+
+requestAnimationFrame(() => {
+  scroll.scrollLeft = shouldScrollChart
+    ? scroll.scrollWidth
+    : 0;
+});
+
+</script>
+
+</body>
+</html>

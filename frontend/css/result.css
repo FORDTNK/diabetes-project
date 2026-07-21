@@ -140,8 +140,72 @@
   padding: 12px;
   border-radius: 12px;
   border: 1px solid #ddd;
-  margin-bottom: 15px;
   font-size: 15px;
+}
+
+.position-input-wrap {
+  position: relative;
+  margin-bottom: 15px;
+}
+
+.position-input-wrap input {
+  padding-right: 46px;
+  margin-bottom: 0;
+}
+
+.position-dropdown-btn {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  width: 42px;
+  height: 42px;
+  border: none;
+  border-left: 1px solid #ddd;
+  border-radius: 0 12px 12px 0;
+  background: #f6f6f6;
+  color: #7a1f28;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.position-dropdown-btn:disabled {
+  color: #bbb;
+  cursor: default;
+}
+
+.position-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  max-height: 160px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.12);
+  z-index: 1000;
+}
+
+.position-menu-item {
+  display: block;
+  width: 100%;
+  padding: 11px 12px;
+  border: none;
+  border-bottom: 1px solid #eee;
+  background: white;
+  color: #333;
+  font-size: 15px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.position-menu-item:last-child {
+  border-bottom: none;
+}
+
+.position-menu-item:hover {
+  background: #f7eef0;
 }
 
 .modal-buttons {

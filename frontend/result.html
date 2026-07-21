@@ -90,10 +90,23 @@
 
         <h3>บันทึกผลการวิเคราะห์</h3>
 
-        <input
-          type="text"
-          data-field="wound-location"
-          placeholder="กรอกตำแหน่งแผล เช่น นิ้วโป้งเท้าซ้าย">
+        <div class="position-input-wrap">
+          <input
+            type="text"
+            data-field="wound-location"
+            list="woundPositionOptions"
+            autocomplete="off"
+            placeholder="กรอกตำแหน่งแผล เช่น นิ้วโป้งเท้าซ้าย">
+
+
+          <datalist id="woundPositionOptions"></datalist>
+
+          <div
+            class="position-menu"
+            data-position-menu
+            hidden>
+          </div>
+        </div>
 
         <div class="modal-buttons">
 
@@ -144,6 +157,14 @@ const gradeEl = document.querySelector("[data-result-grade]");
 const adviceEl = document.querySelector("[data-result-advice]");
 const resultBoxEl = document.querySelector("[data-result-box]");
 const saveModalEl = document.querySelector("[data-save-modal]");
+const woundLocationInput =
+  document.querySelector("[data-field='wound-location']");
+const positionMenuEl =
+  document.querySelector("[data-position-menu]");
+const positionDropdownBtn =
+  document.querySelector("[data-position-dropdown-btn]");
+const woundPositionOptionsEl =
+  document.getElementById("woundPositionOptions");
 
 
 // ================= GLOBAL =================
@@ -151,6 +172,131 @@ const saveModalEl = document.querySelector("[data-save-modal]");
 let predictionData = {};
 let guidelineData = {};
 let uploadedFilename = "";
+let savedWoundPositions = [];
+
+
+// ================= SAVED POSITIONS =================
+
+function getUniqueWoundPositions(items) {
+
+  const seen = new Set();
+
+  return items
+    .map(item => (item.wound_position || "").trim())
+    .filter(position => {
+
+      const key = position.toLowerCase();
+
+      if (!position || seen.has(key)) {
+        return false;
+      }
+
+      seen.add(key);
+      return true;
+
+    });
+
+}
+
+
+function renderWoundPositionOptions() {
+
+  woundPositionOptionsEl.innerHTML = "";
+  positionMenuEl.innerHTML = "";
+
+  savedWoundPositions.forEach(position => {
+
+    const option = document.createElement("option");
+    option.value = position;
+    woundPositionOptionsEl.appendChild(option);
+
+    const item = document.createElement("button");
+    item.type = "button";
+    item.className = "position-menu-item";
+    item.textContent = position;
+
+    item.addEventListener("click", () => {
+
+      woundLocationInput.value = position;
+      closePositionDropdown();
+      woundLocationInput.focus();
+
+    });
+
+    positionMenuEl.appendChild(item);
+
+  });
+
+  positionDropdownBtn.disabled =
+    savedWoundPositions.length === 0;
+
+}
+
+
+async function loadSavedWoundPositions() {
+
+  try {
+
+    const res = await fetch(
+      "http://127.0.0.1:8000/api/history",
+      { headers: getAuthHeaders() }
+    );
+
+    const data = await res.json();
+
+    if (Array.isArray(data)) {
+
+      savedWoundPositions =
+        getUniqueWoundPositions(data);
+
+      renderWoundPositionOptions();
+
+    }
+
+  }
+
+  catch (err) {
+
+    console.error(err);
+
+  }
+
+}
+
+
+function togglePositionDropdown() {
+
+  if (!savedWoundPositions.length) {
+    return;
+  }
+
+  positionMenuEl.hidden =
+    !positionMenuEl.hidden;
+
+  woundLocationInput.focus();
+
+}
+
+
+function closePositionDropdown() {
+
+  positionMenuEl.hidden = true;
+
+}
+
+
+woundLocationInput.addEventListener("input", closePositionDropdown);
+
+document.addEventListener("click", event => {
+
+  if (!event.target.closest(".position-input-wrap")) {
+    closePositionDropdown();
+  }
+
+});
+
+
+loadSavedWoundPositions();
 
 
 // ================= LOAD IMAGE =================
@@ -311,6 +457,7 @@ function openSaveModal(){
 
   saveModalEl.hidden = false;
   saveModalEl.style.display = "flex";
+  loadSavedWoundPositions();
 
 }
 
@@ -327,8 +474,7 @@ function closeSaveModal(){
 async function saveAnalysis(){
 
   const woundLocation =
-    document.querySelector("[data-field='wound-location']")
-    .value
+    woundLocationInput.value
     .trim();
 
   if(!woundLocation){

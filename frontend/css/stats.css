@@ -38,12 +38,45 @@
   font-weight: 700;
   color: #7b2031;
   margin-bottom: 4px;
+  overflow-wrap: anywhere;
 }
 
 .chart-count {
   font-size: 13px;
   color: #444;
   margin-bottom: 12px;
+}
+
+.chart-action-row {
+  margin-top: 8px;
+  display: flex;
+  justify-content: flex-end !important;
+  width: 100%;
+}
+
+.chart-card .chart-more-btn {
+  all: unset;
+  display: inline-block;
+  width: auto !important;
+  min-width: 0;
+  padding: 0 !important;
+  margin: 0;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: #2563eb !important;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.4;
+  text-align: right;
+  box-shadow: none !important;
+  cursor: pointer;
+  appearance: none;
+}
+
+.chart-card .chart-more-btn:hover {
+  color: #1d4ed8 !important;
+  text-decoration: underline;
 }
 
 .chart-wrapper {
@@ -71,4 +104,65 @@
 .stats-container::-webkit-scrollbar-thumb {
   background: #dca7b0;
   border-radius: 20px;
+}
+
+.large-chart-scroll {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  background: white;
+  border-radius: 16px;
+  padding: 12px 10px 8px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.large-chart-scroll:not(.large-chart-scroll--active) {
+  overflow-x: hidden;
+}
+
+.large-chart-stage {
+  height: 420px;
+  min-width: 100%;
+}
+
+.large-chart-stage canvas {
+  width: 100% !important;
+  height: 420px !important;
+}
+
+.large-chart-scroll::-webkit-scrollbar {
+  height: 8px;
+}
+
+.large-chart-scroll::-webkit-scrollbar-thumb {
+  background: #dca7b0;
+  border-radius: 20px;
+}
+
+.stats-detail-container {
+  height: calc(100% - 46px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.stats-detail-container .stats-header {
+  flex: 0 0 auto;
+}
+
+.stats-detail-container .large-chart-scroll {
+  flex: 0 0 auto;
+}
+
+.stats-back-btn {
+  flex: 0 0 auto;
+  width: 38px;
+  height: 38px;
+  border: none;
+  border-radius: 50%;
+  background: white;
+  color: #7b2031;
+  font-size: 17px;
+  cursor: pointer;
+  margin-bottom: 14px;
 }
