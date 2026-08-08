@@ -251,3 +251,74 @@ button {
   color: #ff7b8a;
   text-decoration: none;
 }
+
+/* ================= PROFILE MENU ================= */
+.header,
+.detail-header,
+.header-right {
+  overflow: visible;
+}
+
+.profile {
+  position: relative;
+  cursor: pointer;
+  flex: 0 0 auto;
+  z-index: 1001;
+}
+
+.profile::before {
+  content: "\f007";
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #f25f6c;
+  font-family: "Font Awesome 6 Free";
+  font-weight: 900;
+  font-size: 17px;
+  pointer-events: none;
+}
+
+.profile-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 1002;
+  min-width: 128px;
+  padding: 6px;
+  background: #ffffff;
+  border: 1px solid rgba(122, 31, 40, 0.12);
+  border-radius: 14px;
+  box-shadow: 0 12px 26px rgba(122, 31, 40, 0.18);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
+}
+
+.profile--open .profile-menu {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.profile-menu__logout {
+  width: 100%;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 10px;
+  background: #fff2f4;
+  color: #7a1f28;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.profile-menu__logout:hover {
+  background: #f25f6c;
+  color: #ffffff;
+}
