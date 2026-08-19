@@ -15,6 +15,7 @@ export default function Diabetes() {
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
   const [deleteId, setDeleteId] = useState(null);
   const [newImageName, setNewImageName] = useState('');
 
@@ -22,10 +23,12 @@ export default function Diabetes() {
 
   const fetchItems = async () => {
     try {
+      setError('');
       const { data } = await api.get('/diabetes');
       setItems(data);
     } catch (err) {
       console.error(err);
+      setError(err.response?.data?.error || 'ไม่สามารถโหลดข้อมูลเบาหวานได้');
     } finally {
       setLoading(false);
     }
@@ -34,6 +37,7 @@ export default function Diabetes() {
   const openAdd = () => {
     setEditing(null);
     setForm(emptyForm);
+    setError('');
     setModalOpen(true);
   };
 
@@ -46,6 +50,7 @@ export default function Diabetes() {
       images: item.images ?? [],
       imageFiles: [],
     });
+    setError('');
     setModalOpen(true);
   };
 
@@ -84,12 +89,14 @@ export default function Diabetes() {
   const handleSave = async (e) => {
     e.preventDefault();
     setSaving(true);
+    setError('');
     try {
       const payload = new FormData();
       payload.append('title', form.title);
       payload.append('topic', form.topic);
       payload.append('content', form.content);
-      payload.append('existingImages', JSON.stringify(form.images.map((img) => ({ image_name: img.image_name }))));
+      const imagePayload = JSON.stringify(form.images.map((img) => ({ image_name: img.image_name })));
+      payload.append(editing ? 'existingImages' : 'images', imagePayload);
       form.imageFiles.forEach((file) => {
         payload.append('images', file);
       });
@@ -102,6 +109,7 @@ export default function Diabetes() {
       fetchItems();
     } catch (err) {
       console.error(err);
+      setError(err.response?.data?.error || 'ไม่สามารถบันทึกข้อมูลเบาหวานได้');
     } finally {
       setSaving(false);
     }
@@ -114,6 +122,7 @@ export default function Diabetes() {
       setDeleteId(null);
     } catch (err) {
       console.error(err);
+      setError(err.response?.data?.error || 'ไม่สามารถลบข้อมูลเบาหวานได้');
     }
   };
 
@@ -140,6 +149,12 @@ export default function Diabetes() {
           เพิ่มข้อมูล
         </button>
       </div>
+
+      {error && (
+        <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+          {error}
+        </div>
+      )}
 
       {/* Search */}
       <div className="relative">
@@ -237,6 +252,11 @@ export default function Diabetes() {
           maxWidth="max-w-2xl"
         >
           <form onSubmit={handleSave} className="space-y-4">
+            {error && (
+              <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+                {error}
+              </div>
+            )}
             <div>
               <label className="label-text">ชื่อเรื่อง</label>
               <input

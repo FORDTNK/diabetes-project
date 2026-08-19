@@ -1,0 +1,9 @@
+{
+	"appId": "com.dfucare.app",
+	"appName": "DFU Care+",
+	"webDir": "www",
+	"server": {
+		"url": "https://dfucare-frontend.onrender.com",
+		"cleartext": true
+	}
+}

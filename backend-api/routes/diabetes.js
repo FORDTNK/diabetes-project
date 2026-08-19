@@ -23,6 +23,9 @@ const storage = multer.diskStorage({
 
 const upload = multer({
   storage,
+  limits: {
+    files: 10,
+  },
   fileFilter: (req, file, cb) => {
     if (!file.mimetype.startsWith('image/')) {
       return cb(new Error('Only image files are allowed'));
@@ -33,19 +36,42 @@ const upload = multer({
 
 function normalizeImagesFromBody(bodyImages) {
   if (!bodyImages) return [];
-  if (Array.isArray(bodyImages)) return bodyImages;
+  if (Array.isArray(bodyImages)) {
+    return bodyImages
+      .map((image) => (typeof image === 'string' ? { image_name: image } : image))
+      .filter((image) => image && image.image_name);
+  }
   if (typeof bodyImages !== 'string') return [];
 
   try {
     const parsed = JSON.parse(bodyImages);
-    return Array.isArray(parsed) ? parsed : [];
+    return normalizeImagesFromBody(parsed);
   } catch (err) {
-    return [];
+    return bodyImages.trim() ? [{ image_name: bodyImages.trim() }] : [];
   }
 }
 
 function imageRowsFromFiles(files = []) {
   return files.map((file) => ({ image_name: file.filename }));
+}
+
+function getRequestImages(req) {
+  return [
+    ...normalizeImagesFromBody(req.body.existingImages),
+    ...normalizeImagesFromBody(req.body.images),
+    ...imageRowsFromFiles(req.files)
+  ];
+}
+
+function handleUploadErrors(handler) {
+  return (req, res, next) => {
+    handler(req, res, (err) => {
+      if (err) {
+        return res.status(400).json({ error: err.message || 'ไฟล์รูปภาพไม่ถูกต้อง' });
+      }
+      next();
+    });
+  };
 }
 
 // GET /api/diabetes - list all with images
@@ -108,18 +134,22 @@ router.get('/:id', authMiddleware, async (req, res) => {
 });
 
 // POST /api/diabetes - create
-router.post('/', authMiddleware, upload.array('images', 10), async (req, res) => {
+router.post('/', authMiddleware, handleUploadErrors(upload.any()), async (req, res) => {
+  const connection = await pool.getConnection();
   try {
-    const { user_id, title, topic, content } = req.body;
-    const images = [
-      ...normalizeImagesFromBody(req.body.images),
-      ...imageRowsFromFiles(req.files)
-    ];
+    const { title, topic, content } = req.body;
+    const images = getRequestImages(req);
     const admin_id = req.admin.admin_id;
 
-    const [result] = await pool.query(
-      'INSERT INTO diabetes_info (user_id, title, topic, content, admin_id) VALUES (?, ?, ?, ?, ?)',
-      [user_id || null, title, topic, content, admin_id]
+    if (!title || !title.trim()) {
+      return res.status(400).json({ error: 'กรุณากรอกชื่อเรื่อง' });
+    }
+
+    await connection.beginTransaction();
+
+    const [result] = await connection.query(
+      'INSERT INTO diabetes_info (title, topic, content, admin_id) VALUES (?, ?, ?, ?)',
+      [title.trim(), topic || null, content || null, admin_id]
     );
 
     const diabetes_id = result.insertId;
@@ -127,57 +157,69 @@ router.post('/', authMiddleware, upload.array('images', 10), async (req, res) =>
     // Insert images if provided
     if (images && images.length > 0) {
       const imageValues = images.map(img => [diabetes_id, img.image_name]);
-      await pool.query(
+      await connection.query(
         'INSERT INTO image (diabetes_id, image_name) VALUES ?',
         [imageValues]
       );
     }
 
+    await connection.commit();
     res.status(201).json({ message: 'เพิ่มข้อมูลเบาหวานสำเร็จ', diabetes_id });
   } catch (err) {
+    await connection.rollback();
     console.error('Create diabetes error:', err);
     res.status(500).json({ error: 'เกิดข้อผิดพลาดในการเพิ่มข้อมูล' });
+  } finally {
+    connection.release();
   }
 });
 
 // PUT /api/diabetes/:id - update
-router.put('/:id', authMiddleware, upload.array('images', 10), async (req, res) => {
+router.put('/:id', authMiddleware, handleUploadErrors(upload.any()), async (req, res) => {
+  const connection = await pool.getConnection();
   try {
-    const { user_id, title, topic, content } = req.body;
+    const { title, topic, content } = req.body;
     const hasMultipartImages = req.files && req.files.length > 0;
     const hasExistingImages = req.body.existingImages !== undefined;
     const hasJsonImages = req.body.images !== undefined;
-    const images = [
-      ...normalizeImagesFromBody(req.body.existingImages),
-      ...normalizeImagesFromBody(req.body.images),
-      ...imageRowsFromFiles(req.files)
-    ];
+    const images = getRequestImages(req);
 
-    const [result] = await pool.query(
-      'UPDATE diabetes_info SET user_id = ?, title = ?, topic = ?, content = ? WHERE diabetes_id = ?',
-      [user_id || null, title, topic, content, req.params.id]
+    if (!title || !title.trim()) {
+      return res.status(400).json({ error: 'กรุณากรอกชื่อเรื่อง' });
+    }
+
+    await connection.beginTransaction();
+
+    const [result] = await connection.query(
+      'UPDATE diabetes_info SET title = ?, topic = ?, content = ? WHERE diabetes_id = ?',
+      [title.trim(), topic || null, content || null, req.params.id]
     );
 
     if (result.affectedRows === 0) {
+      await connection.rollback();
       return res.status(404).json({ error: 'ไม่พบข้อมูลที่ต้องการแก้ไข' });
     }
 
     // Update images when the request explicitly sends image data.
     if (hasExistingImages || hasJsonImages || hasMultipartImages) {
-      await pool.query('DELETE FROM image WHERE diabetes_id = ?', [req.params.id]);
+      await connection.query('DELETE FROM image WHERE diabetes_id = ?', [req.params.id]);
       if (images && images.length > 0) {
         const imageValues = images.map(img => [parseInt(req.params.id), img.image_name]);
-        await pool.query(
+        await connection.query(
           'INSERT INTO image (diabetes_id, image_name) VALUES ?',
           [imageValues]
         );
       }
     }
 
+    await connection.commit();
     res.json({ message: 'แก้ไขข้อมูลเบาหวานสำเร็จ' });
   } catch (err) {
+    await connection.rollback();
     console.error('Update diabetes error:', err);
     res.status(500).json({ error: 'เกิดข้อผิดพลาดในการแก้ไขข้อมูล' });
+  } finally {
+    connection.release();
   }
 });
 
